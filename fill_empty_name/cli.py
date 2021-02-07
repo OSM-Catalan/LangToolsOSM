@@ -32,8 +32,7 @@ def fill_empty_namecommand(verbose, dry_run):
         (
             nwr["name:ca"][!"name"](area.searchArea);
         );
-        (._;>;);
-        out body;
+        out tags;
         """)
     else:
         area = area.replace("[","").replace("]","").replace("(","").replace(")","")
@@ -46,8 +45,7 @@ def fill_empty_namecommand(verbose, dry_run):
         (
             nwr["name:ca"][!"name"]({south},{west},{north},{east});
         );
-        (._;>;);
-        out body;
+        out tags;
         """)
 
     changeset = None
