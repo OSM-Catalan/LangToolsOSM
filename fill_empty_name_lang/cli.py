@@ -29,7 +29,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
         result = overpass_api.query(f"""
         area[name="{area}"]->.searchArea;
         (
-            nwr["name"][~"name:.*"~"."][!"name:{lang}"](area.searchArea);
+            nwr["name"][~"name:[a-z]+"~"."][!"name:{lang}"](area.searchArea);
         );
         out tags;
         """)
@@ -42,7 +42,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
 
         result = overpass_api.query(f"""
         (
-            nwr["name"][~"name:.*"~"."][!"name:{lang}"]({south},{west},{north},{east});
+            nwr["name"][~"name:[a-z]+"~"."][!"name:{lang}"]({south},{west},{north},{east});
         );
         out tags;
         """)
