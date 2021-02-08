@@ -30,7 +30,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': ['fill_empty_name=fill_empty_name.cli:fill_empty_namecommand',
-                            'fill_empty_name_lang=fill_empty_name_lang.cli:fill_empty_name_langcommand']},
+                            'fill_empty_name_lang=fill_empty_name_lang.cli:fill_empty_name_langcommand',
+                            'regex_name_lang=regex_name_lang.cli:regex_name_langcommand']},
     long_description="CLI tool to fill empty name tag with name:LANG and the reverse."
 )
 
