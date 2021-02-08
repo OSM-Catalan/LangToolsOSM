@@ -51,90 +51,90 @@ def fill_empty_namecommand(verbose, dry_run):
     changeset = None
     for rn in tqdm(result.nodes):
         if f"name:{default_lang}" in rn.tags:
-                tags = {}
+            tags = {}
 
-                if verbose:
-                    print(rn.tags)
-                print(f"OSM id:{rn.id}(node) name:{default_lang}=" + rn.tags.get(f"name:{default_lang}", ""))
-                tags["name"] = rn.tags["name:" + default_lang]
-                print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
-                print("------------------------------------------------------")
-                if tags:
-                    node = api.NodeGet(rn.id)
-                    node_data = {
-                    'id': node["id"],
-                        'lat': node["lat"],
-                        'lon': node["lon"],
-                        'tag': node["tag"],
-                        'version': node["version"],
-                    }
-                    node_data["tag"].update(tags)
-                    if changeset is None and not dry_run:
-                        api.ChangesetCreate(changesetTags)
-                        changeset = True
+            if verbose:
+                print(rn.tags)
+            print(f"OSM id:{rn.id}(node) name:{default_lang}=" + rn.tags.get(f"name:{default_lang}", ""))
+            tags["name"] = rn.tags["name:" + default_lang]
+            print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
+            print("------------------------------------------------------")
+            if tags:
+                node = api.NodeGet(rn.id)
+                node_data = {
+                'id': node["id"],
+                    'lat': node["lat"],
+                    'lon': node["lon"],
+                    'tag': node["tag"],
+                    'version': node["version"],
+                }
+                node_data["tag"].update(tags)
+                if changeset is None and not dry_run:
+                    api.ChangesetCreate(changesetTags)
+                    changeset = True
 
-                    allow_node = input("It's correct[Y/n]:")
-                    if allow_node in ["y","","Y","yes"] and not dry_run:
-                        api.NodeUpdate(node_data)
-                    print("\n")
+                allow_node = input("It's correct[Y/n]:")
+                if allow_node in ["y","","Y","yes"] and not dry_run:
+                    api.NodeUpdate(node_data)
+                print("\n")
 
 
     for rw in tqdm(result.ways):
         if f"name:{default_lang}" in rw.tags:
-                tags = {}
+            tags = {}
 
-                if verbose:
-                    print(rw.tags)
-                print(f"OSM id:{rw.id}(way) name:{default_lang}=" + rw.tags.get(f"name:{default_lang}", ""))
-                tags["name"] = rw.tags["name:" + default_lang]
-                print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
-                print("------------------------------------------------------")
-                if tags:
-                    way = api.WayGet(rw.id)
-                    way_data = {
-                        'id': way["id"],
-                        'nd': way["nd"],
-                        'tag': way["tag"],
-                        'version': way["version"],
-                    }
-                    way_data["tag"].update(tags)
-                    if changeset is None and not dry_run:
-                        api.ChangesetCreate(changesetTags)
-                        changeset = True
+            if verbose:
+                print(rw.tags)
+            print(f"OSM id:{rw.id}(way) name:{default_lang}=" + rw.tags.get(f"name:{default_lang}", ""))
+            tags["name"] = rw.tags["name:" + default_lang]
+            print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
+            print("------------------------------------------------------")
+            if tags:
+                way = api.WayGet(rw.id)
+                way_data = {
+                    'id': way["id"],
+                    'nd': way["nd"],
+                    'tag': way["tag"],
+                    'version': way["version"],
+                }
+                way_data["tag"].update(tags)
+                if changeset is None and not dry_run:
+                    api.ChangesetCreate(changesetTags)
+                    changeset = True
 
-                    allow_way = input("It's correct[Y/n]:")
-                    if allow_way in ["y","","Y","yes"] and not dry_run:
-                        api.WayUpdate(way_data)
-                    print("\n")
+                allow_way = input("It's correct[Y/n]:")
+                if allow_way in ["y","","Y","yes"] and not dry_run:
+                    api.WayUpdate(way_data)
+                print("\n")
 
 
     for rr in tqdm(result.relations):
         if f"name:{default_lang}" in rr.tags:
-                tags = {}
+            tags = {}
 
-                if verbose:
-                    print(rr.tags)
-                print(f"OSM id:{rr.id}(relation) name:{default_lang}=" + rr.tags.get(f"name:{default_lang}", ""))
-                tags["name"] = rr.tags["name:" + default_lang]
-                print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
-                print("------------------------------------------------------")
-                if tags:
-                    rel = api.RelationGet(rr.id)
-                    rel_data = {
-                        'id': rel["id"],
-                        'member': rel["member"],
-                        'tag': rel["tag"],
-                        'version': rel["version"],
-                    }
-                    rel_data["tag"].update(tags)
-                    if changeset is None and not dry_run:
-                        api.ChangesetCreate(changesetTags)
-                        changeset = True
+            if verbose:
+                print(rr.tags)
+            print(f"OSM id:{rr.id}(relation) name:{default_lang}=" + rr.tags.get(f"name:{default_lang}", ""))
+            tags["name"] = rr.tags["name:" + default_lang]
+            print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
+            print("------------------------------------------------------")
+            if tags:
+                rel = api.RelationGet(rr.id)
+                rel_data = {
+                    'id': rel["id"],
+                    'member': rel["member"],
+                    'tag': rel["tag"],
+                    'version': rel["version"],
+                }
+                rel_data["tag"].update(tags)
+                if changeset is None and not dry_run:
+                    api.ChangesetCreate(changesetTags)
+                    changeset = True
 
-                    allow_rel = input("It's correct[Y/n]:")
-                    if allow_rel in ["y","","Y","yes"] and not dry_run:
-                        api.RelationUpdate(rel_data)
-                    print("\n")
+                allow_rel = input("It's correct[Y/n]:")
+                if allow_rel in ["y","","Y","yes"] and not dry_run:
+                    api.RelationUpdate(rel_data)
+                print("\n")
 
     if changeset and not dry_run:
         api.ChangesetClose()

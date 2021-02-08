@@ -57,7 +57,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
                 if verbose:
                     print(rn.tags)
                 print(f"OSM id:{rn.id}(node)" + Style.BRIGHT)
-                for key, value in rn.tags.items():   # iter on both keys and values
+                for key, value in rn.tags.items():
                     if key.startswith('name'):
                         print(key + "=" + value, end=", ")
                 print(Fore.GREEN + "\n+ " + str(tags) + Style.RESET_ALL)
@@ -91,7 +91,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
                 if verbose:
                     print(rw.tags)
                 print(f"OSM id:{rw.id}(node)" + Style.BRIGHT)
-                for key, value in rw.tags.items():   # iter on both keys and values
+                for key, value in rw.tags.items():
                     if key.startswith('name'):
                         print(key + "=" + value, end=", ")
                 print(Fore.GREEN + "\n+ " + str(tags) + Style.RESET_ALL)
@@ -124,7 +124,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
                 if verbose:
                     print(rr.tags)
                 print(f"OSM id:{rr.id}(node)" + Style.BRIGHT)
-                for key, value in rr.tags.items():   # iter on both keys and values
+                for key, value in rr.tags.items():
                     if key.startswith('name'):
                         print(key + "=" + value, end=", ")
                 print(Fore.GREEN + "\n+ " + str(tags) + Style.RESET_ALL)
