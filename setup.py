@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "LangToolsOSM"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 
 
@@ -23,7 +23,7 @@ setup(
     description="CLI tool ",
     author_email="joanmaspons@gmail.com",
     url="https://github.com/OSM-Catalan/LangToolsOSM",
-    keywords=["OpenStreetMap"],
+    keywords=["OpenStreetMap", "localisation"],
     install_requires=REQUIRES,
     packages=find_packages(),
     package_data={},
@@ -31,7 +31,8 @@ setup(
     entry_points={
         'console_scripts': ['fill_empty_name=fill_empty_name.cli:fill_empty_namecommand',
                             'fill_empty_name_lang=fill_empty_name_lang.cli:fill_empty_name_langcommand',
-                            'regex_name_lang=regex_name_lang.cli:regex_name_langcommand']},
-    long_description="CLI tool to fill empty name tag with name:LANG and the reverse."
+                            'regex_name_lang=regex_name_lang.cli:regex_name_langcommand',
+                            'translate_with_wikidata=translate_with_wikidata.cli:translate_with_wikidatacommand']},
+    long_description="CLI tool to help with localisation of OpenStreet. Edit name:LANG and name."
 )
 

@@ -42,7 +42,7 @@ def fill_empty_name_langcommand(verbose, dry_run):
 
         result = overpass_api.query(f"""
         (
-            nwr["name"][~"name:[a-z]+"~"."][!"name:{lang}"]({south},{west},{north},{east});
+            nwr["name"]["wikidata"][~"name:[a-z]+"~".*"][!"name:{lang}"]({south},{west},{north},{east});
         );
         out tags;
         """)
