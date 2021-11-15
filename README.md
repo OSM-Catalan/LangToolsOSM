@@ -24,7 +24,9 @@ Execute the commands
 All commands accept the following flags:
 
 * ```--verbose```: print the changeset tags and all the tags of the features that you are currently editing.
-* ```--dry-run```: run the program without saving any change to OSM. Useful for testing. No login required.
+* ```--dry-run```: run the program without saving any change to OSM. Useful for testing. No login required, ignores ```--username```.
+* ```--help```: show documentation with all the available options.
 
-The programs will ask you your username and OSM password to be able to edit OSM. Then, it will ask you the zone you want to edit.
-You can specify the coordinates of the bounding box in the following format ```(South,West,North,East)``` or the ```name``` value of a feature with area.
+You will be asked for necessary options if they are not passed to the command call (```--area```, ```--lang```, ```--username```).
+
+You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)``` or by the exact ```name``` value of a feature with area.

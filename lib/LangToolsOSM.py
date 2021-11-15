@@ -6,11 +6,11 @@ import re
 import requests
 
 
-def login_OSM(user=None) -> osmapi.OsmApi:
-    if not user:
-        user = input("User: ")
+def login_OSM(username=None) -> osmapi.OsmApi:
+    if not username:
+        username = input("User: ")
     password = getpass.getpass("Password: ")
-    api = osmapi.OsmApi(username=user, password=password)
+    api = osmapi.OsmApi(username=username, password=password)
     return api
 
 

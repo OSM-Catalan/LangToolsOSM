@@ -5,15 +5,17 @@ from tqdm import tqdm
 
 
 @click.command()
-@click.option("--verbose", default=False, is_flag=True)
-@click.option("--dry-run", default=False, is_flag=True)
-def regex_name_langcommand(verbose, dry_run):
+@click.option('--find', prompt='Regular expression to search at name tags', type=str, help='Regular expression to search at name tags.')
+@click.option('--replace', prompt='Regular expression to replace object name and fill name:{LANG}', type=str, help='Regular expression to replace object name and fill name:{LANG}.')
+@click.option('--area', prompt='Bounding box (South,West,North,East) or the exact name value of an area', type=str, help='Eg. "42.49,2.43,42.52,2.49" or "Le Canigou".')
+@click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
+@click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
+@click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
+@click.option('--verbose', '-v', default=False, is_flag=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
+def regex_name_langcommand(find, replace, area, dry_run, lang, username, verbose):
+    """Look for features with «name» matching a regular expression and fill «name:LANG» with a modified version of «name» by a regular expression."""
     if not dry_run:
-        api = lt.login_OSM()
-    area = input("Bounding box(South,West,North,East) or name value: ")
-    lang = input("Name language to add (e.g. ca, en, ...): ") or "ca"
-    find = input("Regular expression to search at name tags: ")
-    replace = input(f"Regular expression to replace object name and fill name:{lang} : ")
+        api = lt.login_OSM(username=username)
     changeset_tags = {u"comment": f"Fill empty name:{lang} tags with regex name:«" +
                                   find + f"» -> name:{lang}=«" + replace + "».",
                       u"source": u"name tag"}
