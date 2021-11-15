@@ -1,4 +1,4 @@
-CLI tool to help with the localisation of OpenStreetMap.
+CLI tools to help with the localisation of OpenStreetMap.
 Edit ```name:LANG``` and ```name``` keys, always supervised by the user.
 
 # Requirements
@@ -24,7 +24,7 @@ Execute the commands
 All commands accept the following flags:
 
 * ```--verbose```: print the changeset tags and all the tags of the features that you are currently editing.
-* ```--dry-run```: run the program without saving any change to OSM. Useful for testing.
+* ```--dry-run```: run the program without saving any change to OSM. Useful for testing. No login required.
 
 The programs will ask you your username and OSM password to be able to edit OSM. Then, it will ask you the zone you want to edit.
 You can specify the coordinates of the bounding box in the following format ```(South,West,North,East)``` or the ```name``` value of a feature with area.

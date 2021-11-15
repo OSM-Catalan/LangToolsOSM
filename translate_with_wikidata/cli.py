@@ -1,9 +1,6 @@
 import click
 from colorama import Fore, Style
-import getpass
-import osmapi
-import overpy
-import re
+import lib.LangToolsOSM as lt
 import requests
 from tqdm import tqdm
 
@@ -29,59 +26,26 @@ def get_translations(ident, lang) -> dict:
 @click.option("--verbose", default=False, is_flag=True)
 @click.option("--dry-run", default=False, is_flag=True)
 def translate_with_wikidatacommand(verbose, dry_run):
-    overpass_api = overpy.Overpass()
+    if not dry_run:
+        api = lt.login_OSM()
     area = input("Bounding box(South,West,North,East) or name value: ")
     lang = input("Name language to add (e.g. ca, en, ...): ") or "ca"
-    if not dry_run:
-        user = input("User: ")
-        password = getpass.getpass("Password: ")
-        api = osmapi.OsmApi(username=user, password=password)
-
     changeset_tags = {u"comment": f"Fill empty name:{lang} tags translations from wikidata", u"source": u"wikidata"}
-
     if verbose:
         print(changeset_tags)
 
-    if re.search('([0-9.-]+,){3}[0-9.-]+', area) is None:
-        result = overpass_api.query(f"""
-        area[name="{area}"]->.searchArea;
-        (
-            nwr["name"]["wikidata"][!"name:{lang}"](area.searchArea);
-        );
-        out tags;
-        """)
-        # TODO: [~"name:[a-z]+"~"."]
-    else:
-        area = area.replace("[", "").replace("]", "").replace("(", "").replace(")", "")
-        south = area.split(",")[0]
-        west = area.split(",")[1]
-        north = area.split(",")[2]
-        east = area.split(",")[3]
-
-        result = overpass_api.query(f"""
-        (
-            nwr["name"]["wikidata"][!"name:{lang}"]({south},{west},{north},{east});
-        );
-        out tags;
-        """)
-        # TODO: [~"name:[a-z]+"~"."]
+    result = lt.get_overpass_result(area=area, filters=f'nwr["name"]["wikidata"][!"name:{lang}"]')
+    # TODO: [~"name:[a-z]+"~"."] as default?
     changeset = None
     for rn in tqdm(result.nodes):
         translations = get_translations(rn.tags["wikidata"], lang)
         if translations["translations"]:
             tags = {}
-            if verbose:
-                print(rn.tags)
-            print(f"OSM id:{rn.id}(node)" + Style.BRIGHT)
-            for key, value in rn.tags.items():
-                if key.startswith('name'):
-                    print(key + "=" + value, end=", ")
-            print(Style.RESET_ALL)
-            print("------------------------------------------------------")
+            lt.print_element(rn, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
-            i = 1
             if 'aliases' in translations['translations'].keys():
+                i = 1
                 for alias in translations['translations']['aliases']:
                     print(str(i) + ' = ' + alias['value'])
                     translation_options.append(alias['value'])
@@ -93,46 +57,27 @@ def translate_with_wikidatacommand(verbose, dry_run):
                 select_translation = input("Select translation ('-' to skip): ") or '0'
 
             if select_translation in '-':
-                next
+                continue
             else:
                 select_translation = int(select_translation)
 
             tags["name:" + lang] = translation_options[select_translation]
-            print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
             if changeset is None and not dry_run:
                 api.ChangesetCreate(changeset_tags)
                 changeset = True
 
-            allow_node = input("It's correct[Y/n]:")
-            if allow_node in ["y", "Y", "yes", ""] and not dry_run:
-                node = api.NodeGet(rn.id)
-                node_data = {
-                    'id': node["id"],
-                    'lat': node["lat"],
-                    'lon': node["lon"],
-                    'tag': node["tag"],
-                    'version': node["version"],
-                }
-                node_data["tag"].update(tags)
-                api.NodeUpdate(node_data)
-            print("\n")
+            if not dry_run:
+                lt.update_element(element=rn, tags=tags, api=api)
 
     for rw in tqdm(result.ways):
         translations = get_translations(rw.tags["wikidata"], lang)
         if translations["translations"]:
             tags = {}
-            if verbose:
-                print(rw.tags)
-            print(f"OSM id:{rw.id}(node)" + Style.BRIGHT)
-            for key, value in rw.tags.items():
-                if key.startswith('name'):
-                    print(key + "=" + value, end=", ")
-            print(Style.RESET_ALL)
-            print("------------------------------------------------------")
+            lt.print_element(rw, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
-            i = 1
             if 'aliases' in translations['translations'].keys():
+                i = 1
                 for alias in translations['translations']['aliases']:
                     print(str(i) + ' = ' + alias['value'])
                     translation_options.append(alias['value'])
@@ -144,46 +89,27 @@ def translate_with_wikidatacommand(verbose, dry_run):
                 select_translation = input("Select translation ('-' to skip): ") or '0'
 
             if select_translation in '-':
-                next
+                continue
             else:
                 select_translation = int(select_translation)
 
             tags["name:" + lang] = translation_options[select_translation]
-            print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
             if changeset is None and not dry_run:
                 api.ChangesetCreate(changeset_tags)
                 changeset = True
 
-            allow_node = input("It's correct[Y/n]:")
-            if allow_node in ["y", "Y", "yes", ""] and not dry_run:
-                node = api.NodeGet(rw.id)
-                node_data = {
-                    'id': node["id"],
-                    'lat': node["lat"],
-                    'lon': node["lon"],
-                    'tag': node["tag"],
-                    'version': node["version"],
-                }
-                node_data["tag"].update(tags)
-                api.NodeUpdate(node_data)
-            print("\n")
+            if not dry_run:
+                lt.update_element(element=rw, tags=tags, api=api)
 
     for rr in tqdm(result.relations):
         translations = get_translations(rr.tags["wikidata"], lang)
         if translations["translations"]:
             tags = {}
-            if verbose:
-                print(rr.tags)
-            print(f"OSM id:{rr.id}(node)" + Style.BRIGHT)
-            for key, value in rr.tags.items():
-                if key.startswith('name'):
-                    print(key + "=" + value, end=", ")
-            print(Style.RESET_ALL)
-            print("------------------------------------------------------")
+            lt.print_element(rr, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
-            i = 1
             if 'aliases' in translations['translations'].keys():
+                i = 1
                 for alias in translations['translations']['aliases']:
                     print(str(i) + ' = ' + alias['value'])
                     translation_options.append(alias['value'])
@@ -195,29 +121,17 @@ def translate_with_wikidatacommand(verbose, dry_run):
                 select_translation = input("Select translation ('-' to skip): ") or '0'
 
             if select_translation in '-':
-                next
+                continue
             else:
                 select_translation = int(select_translation)
 
             tags["name:" + lang] = translation_options[select_translation]
-            print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
             if changeset is None and not dry_run:
                 api.ChangesetCreate(changeset_tags)
                 changeset = True
 
-            allow_node = input("It's correct[Y/n]:")
-            if allow_node in ["y", "Y", "yes", ""] and not dry_run:
-                node = api.NodeGet(rr.id)
-                node_data = {
-                    'id': node["id"],
-                    'lat': node["lat"],
-                    'lon': node["lon"],
-                    'tag': node["tag"],
-                    'version': node["version"],
-                }
-                node_data["tag"].update(tags)
-                api.NodeUpdate(node_data)
-            print("\n")
+            if not dry_run:
+                lt.update_element(element=rr, tags=tags, api=api)
 
     if changeset and not dry_run:
         api.ChangesetClose()
