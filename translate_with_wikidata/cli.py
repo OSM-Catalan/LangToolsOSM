@@ -24,12 +24,13 @@ def get_translations(ident, lang) -> dict:
 
 
 @click.command()
-@click.option('--area', prompt='Bounding box (South,West,North,East) or the exact name value of an area', type=str, help='Eg. "42.49,2.43,42.52,2.49" or "Le Canigou".')
+@click.option('--area', prompt='Bounding box (South,West,North,East), overpass filters or the exact name value of an area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou").')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
+@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']""""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', default=False, is_flag=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
-def translate_with_wikidatacommand(area, dry_run, lang, username, verbose):
+def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbose):
     """Add «name:LANG» selecting the label or alias from «wikidata»."""
     if not dry_run:
         api = lt.login_OSM(username=username)
@@ -38,8 +39,9 @@ def translate_with_wikidatacommand(area, dry_run, lang, username, verbose):
     if verbose:
         print(changeset_tags)
 
-    result = lt.get_overpass_result(area=area, filters=f'nwr["name"]["wikidata"][!"name:{lang}"]')
-    # TODO: [~"name:[a-z]+"~"."] as default?
+    if not filters:
+        filters = f"nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']"
+    result = lt.get_overpass_result(area=area, filters=filters)
     changeset = None
     for rn in tqdm(result.nodes):
         translations = get_translations(rn.tags["wikidata"], lang)

@@ -16,19 +16,8 @@ def login_OSM(username=None) -> osmapi.OsmApi:
 
 def get_overpass_result(area: str, filters: str) -> overpy.Result:
     overpass_api = overpy.Overpass()
-    # filters = f"""
-    #     nwr["name"]["wikidata"][!"name:{lang}"]
-    # """
-    if re.search('([0-9.-]+,){3}[0-9.-]+', area) is None:
-        query = f"""
-        area[name="{area}"]->.searchArea;
-        (
-            {filters}(area.searchArea);
-        );
-        out tags;
-        """
-        # TODO: [~"name:[a-z]+"~"."]
-    else:
+    # filters = "nwr['name']['wikidata'][~"name:[a-z]+"~"."]"
+    if re.search('([0-9.-]+,){3}[0-9.-]+', area):
         area = area.replace("[", "").replace("]", "").replace("(", "").replace(")", "")
         south = area.split(",")[0]
         west = area.split(",")[1]
@@ -41,7 +30,22 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         );
         out tags;
         """
-        # TODO: [~"name:[a-z]+"~"."]
+    elif re.search('^\[.+\]$', area):
+        query = f"""
+         area{area}->.searchArea;
+         (
+             {filters}(area.searchArea);
+         );
+         out tags;
+         """
+    else:
+        query = f"""
+        area[name="{area}"]->.searchArea;
+        (
+            {filters}(area.searchArea);
+        );
+        out tags;
+        """
 
     result = overpass_api.query(query=query)
     return result
