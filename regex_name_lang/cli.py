@@ -1,5 +1,6 @@
 import click
 import lib.LangToolsOSM as lt
+from lib import __version__
 import re
 from tqdm import tqdm
 
@@ -18,7 +19,7 @@ def regex_name_langcommand(find, replace, area, dry_run, lang, username, verbose
         api = lt.login_OSM(username=username)
     changeset_tags = {u"comment": f"Fill empty name:{lang} tags with regex name:«" +
                                   find + f"» -> name:{lang}=«" + replace + "».",
-                      u"source": u"name tag"}
+                      u"source": u"name tag", u"created_by=": f"LangToolsOSM {__version__}"}
     if verbose:
         print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=f'nwr["name"~"{find}"][!"name:{lang}"]')

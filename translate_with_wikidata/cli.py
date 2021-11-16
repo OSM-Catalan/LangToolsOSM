@@ -1,6 +1,7 @@
 import click
 from colorama import Fore, Style
 import lib.LangToolsOSM as lt
+from lib import __version__
 import requests
 from tqdm import tqdm
 
@@ -32,7 +33,8 @@ def translate_with_wikidatacommand(area, dry_run, lang, username, verbose):
     """Add «name:LANG» selecting the label or alias from «wikidata»."""
     if not dry_run:
         api = lt.login_OSM(username=username)
-    changeset_tags = {u"comment": f"Fill empty name:{lang} tags translations from wikidata", u"source": u"wikidata"}
+    changeset_tags = {u"comment": f"Fill empty name:{lang} tags translations from wikidata",
+                      u"source": u"wikidata", u"created_by=": f"LangToolsOSM {__version__}"}
     if verbose:
         print(changeset_tags)
 

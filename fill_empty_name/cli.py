@@ -1,5 +1,6 @@
 import click
 import lib.LangToolsOSM as lt
+from lib import __version__
 from tqdm import tqdm
 
 
@@ -13,7 +14,8 @@ def fill_empty_namecommand(area, dry_run, lang, username, verbose):
     """Looks for features with «name:LANG» & without «name» tags and copy «name:LANG» value to «name»."""
     if not dry_run:
         api = lt.login_OSM(username=username)
-    changeset_tags = {u"comment": f"Fill empty name tags with name:{lang}", u"source": f"name:{lang} tag"}
+    changeset_tags = {u"comment": f"Fill empty name tags with name:{lang}",
+                      u"source": f"name:{lang} tag", u"created_by=": f"LangToolsOSM {__version__}"}
     if verbose:
         print(changeset_tags)
 
