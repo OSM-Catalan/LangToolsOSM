@@ -88,7 +88,7 @@ def update_element(element, tags, api):
                 'version': node["version"],
             }
             node_data["tag"].update(tags)
-            api.NodeUpdate(node_data)
+            return api.NodeUpdate(node_data)
         elif element._type_value in 'way':
             way = api.WayGet(element.id)
             way_data = {
@@ -98,7 +98,7 @@ def update_element(element, tags, api):
                 'version': way["version"],
             }
             way_data["tag"].update(tags)
-            api.WayUpdate(way_data)
+            return api.WayUpdate(way_data)
         elif element._type_value in 'relation':
             rel = api.RelationGet(element.id)
             rel_data = {
@@ -108,6 +108,4 @@ def update_element(element, tags, api):
                 'version': rel["version"],
             }
             rel_data["tag"].update(tags)
-            api.RelationUpdate(rel_data)
-
-
+            return api.RelationUpdate(rel_data)

@@ -28,7 +28,8 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     for rn in tqdm(result.nodes):
         if f"name:{lang}" in rn.tags:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rn, verbose=verbose)
             tags["name"] = rn.tags["name:" + lang]
             if tags:
@@ -37,13 +38,15 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                     changeset = True
 
                 if not dry_run:
-                    lt.update_element(element=rn, tags=tags, api=api)
-                    n_edits = n_edits + 1
+                    committed = lt.update_element(element=rn, tags=tags, api=api)
+                    if committed:
+                        n_edits = n_edits + 1
 
     for rw in tqdm(result.ways):
         if f"name:{lang}" in rw.tags:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rw, verbose=verbose)
             tags["name"] = rw.tags["name:" + lang]
             if tags:
@@ -52,13 +55,15 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                     changeset = True
 
                 if not dry_run:
-                    lt.update_element(element=rw, tags=tags, api=api)
-                    n_edits = n_edits + 1
+                    committed = lt.update_element(element=rw, tags=tags, api=api)
+                    if committed:
+                        n_edits = n_edits + 1
 
     for rr in tqdm(result.relations):
         if f"name:{lang}" in rr.tags:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rr, verbose=verbose)
             tags["name"] = rr.tags["name:" + lang]
             if tags:
@@ -67,9 +72,12 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                     changeset = True
 
                 if not dry_run:
-                    lt.update_element(element=rr, tags=tags, api=api)
-                    n_edits = n_edits + 1
+                    committed = lt.update_element(element=rr, tags=tags, api=api)
+                    if committed:
+                        n_edits = n_edits + 1
 
     if changeset and not dry_run:
-        print(f'DONE! https://www.osm.org/changeset/{changeset_id}')
+        print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset_id}')
         api.ChangesetClose()
+    else:
+        print('DONE! No change to OSM (--dry-run mode)')

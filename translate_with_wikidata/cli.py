@@ -54,7 +54,8 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rn, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -81,8 +82,9 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
                 changeset = True
 
             if not dry_run:
-                lt.update_element(element=rn, tags=tags, api=api)
-                n_edits = n_edits + 1
+                committed = lt.update_element(element=rn, tags=tags, api=api)
+                if committed:
+                    n_edits = n_edits + 1
 
     for rw in tqdm(result.ways):
         if rw.tags['wikidata'] in db.keys():
@@ -93,7 +95,8 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rw, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -120,8 +123,9 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
                 changeset = True
 
             if not dry_run:
-                lt.update_element(element=rw, tags=tags, api=api)
-                n_edits = n_edits + 1
+                committed = lt.update_element(element=rw, tags=tags, api=api)
+                if committed:
+                    n_edits = n_edits + 1
 
     for rr in tqdm(result.relations):
         if rr.tags['wikidata'] in db.keys():
@@ -132,7 +136,8 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
-            print(f'Number of editions in the current changeset: {n_edits}')
+            if not dry_run:
+                print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rr, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -159,9 +164,12 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
                 changeset = True
 
             if not dry_run:
-                lt.update_element(element=rr, tags=tags, api=api)
-                n_edits = n_edits + 1
+                committed = lt.update_element(element=rr, tags=tags, api=api)
+                if committed:
+                    n_edits = n_edits + 1
 
     if changeset and not dry_run:
-        print(f'DONE! https://www.osm.org/changeset/{changeset_id}')
+        print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset_id}')
         api.ChangesetClose()
+    else:
+        print('DONE! No change to OSM (--dry-run mode)')
