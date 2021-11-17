@@ -43,9 +43,15 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
         filters = f"nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']"
     result = lt.get_overpass_result(area=area, filters=filters)
     changeset = None
+    db = dict()
     for rn in tqdm(result.nodes):
-        translations = get_translations(rn.tags["wikidata"], lang)
-        if translations["translations"]:
+        if rn.tags['wikidata'] in db.keys():
+            translations = {'id': rn.tags['wikidata'], 'translations': db[rn.tags['wikidata']]['translations']}
+        else:
+            translations = get_translations(rn.tags['wikidata'], lang)
+            db.update({translations['id']: {'translations': translations['translations'], 'response': ''}})
+
+        if translations['translations']:
             tags = {}
             lt.print_element(rn, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
@@ -76,8 +82,13 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
                 lt.update_element(element=rn, tags=tags, api=api)
 
     for rw in tqdm(result.ways):
-        translations = get_translations(rw.tags["wikidata"], lang)
-        if translations["translations"]:
+        if rw.tags['wikidata'] in db.keys():
+            translations = {'id': rw.tags['wikidata'], 'translations': db[rw.tags['wikidata']]['translations']}
+        else:
+            translations = get_translations(rw.tags['wikidata'], lang)
+            db.update({translations['id']: {'translations': translations['translations'], 'response': ''}})
+
+        if translations['translations']:
             tags = {}
             lt.print_element(rw, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
@@ -108,8 +119,13 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
                 lt.update_element(element=rw, tags=tags, api=api)
 
     for rr in tqdm(result.relations):
-        translations = get_translations(rr.tags["wikidata"], lang)
-        if translations["translations"]:
+        if rr.tags['wikidata'] in db.keys():
+            translations = {'id': rr.tags['wikidata'], 'translations': db[rr.tags['wikidata']]['translations']}
+        else:
+            translations = get_translations(rr.tags['wikidata'], lang)
+            db.update({translations['id']: {'translations': translations['translations'], 'response': ''}})
+
+        if translations['translations']:
             tags = {}
             lt.print_element(rr, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
