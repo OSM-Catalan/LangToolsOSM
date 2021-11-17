@@ -44,6 +44,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
     result = lt.get_overpass_result(area=area, filters=filters)
     changeset = None
     db = dict()
+    n_edits = 0
     for rn in tqdm(result.nodes):
         if rn.tags['wikidata'] in db.keys():
             translations = {'id': rn.tags['wikidata'], 'translations': db[rn.tags['wikidata']]['translations']}
@@ -53,6 +54,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
+            print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rn, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -80,6 +82,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
             if not dry_run:
                 lt.update_element(element=rn, tags=tags, api=api)
+                n_edits = n_edits + 1
 
     for rw in tqdm(result.ways):
         if rw.tags['wikidata'] in db.keys():
@@ -90,6 +93,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
+            print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rw, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -117,6 +121,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
             if not dry_run:
                 lt.update_element(element=rw, tags=tags, api=api)
+                n_edits = n_edits + 1
 
     for rr in tqdm(result.relations):
         if rr.tags['wikidata'] in db.keys():
@@ -127,6 +132,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
         if translations['translations']:
             tags = {}
+            print(f'Number of editions in the current changeset: {n_edits}')
             lt.print_element(rr, verbose=verbose)
             print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
             translation_options = [translations['translations']['label']['value']]
@@ -154,6 +160,7 @@ def translate_with_wikidatacommand(area, dry_run, filters, lang, username, verbo
 
             if not dry_run:
                 lt.update_element(element=rr, tags=tags, api=api)
+                n_edits = n_edits + 1
 
     if changeset and not dry_run:
         print(f'DONE! https://www.osm.org/changeset/{changeset_id}')

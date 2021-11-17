@@ -24,12 +24,14 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
     result = lt.get_overpass_result(area=area, filters=filters)
     changeset = None
+    n_edits = 0
     for rn in tqdm(result.nodes):
         if "name" in rn.tags:
             tags = {}
             tags["name:" + lang] = rn.tags["name"]
 
             if tags:
+                print(f'Number of editions in the current changeset: {n_edits}')
                 lt.print_element(rn, verbose=verbose)
                 if changeset is None and not dry_run:
                     changeset_id = api.ChangesetCreate(changeset_tags)
@@ -37,7 +39,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
 
                 if not dry_run:
                     lt.update_element(element=rn, tags=tags, api=api)
-                print("\n")
+                    n_edits = n_edits + 1
 
     for rw in tqdm(result.ways):
         if "name" in rw.tags:
@@ -45,6 +47,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
             tags["name:" + lang] = rw.tags["name"]
 
             if tags:
+                print(f'Number of editions in the current changeset: {n_edits}')
                 lt.print_element(rw, verbose=verbose)
                 if changeset is None and not dry_run:
                     changeset_id = api.ChangesetCreate(changeset_tags)
@@ -52,6 +55,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
 
                 if not dry_run:
                     lt.update_element(element=rw, tags=tags, api=api)
+                    n_edits = n_edits + 1
 
     for rr in tqdm(result.relations):
         if "name:" in rr.tags:
@@ -59,6 +63,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
             tags["name:" + lang] = rr.tags["name"]
 
             if tags:
+                print(f'Number of editions in the current changeset: {n_edits}')
                 lt.print_element(rr, verbose=verbose)
                 if changeset is None and not dry_run:
                     changeset_id = api.ChangesetCreate(changeset_tags)
@@ -66,6 +71,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
 
                 if not dry_run:
                     lt.update_element(element=rr, tags=tags, api=api)
+                    n_edits = n_edits + 1
 
     if changeset and not dry_run:
         print(f'DONE! https://www.osm.org/changeset/{changeset_id}')

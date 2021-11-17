@@ -62,6 +62,7 @@ def print_element(element, remark='name', verbose=False):
         element_type = '???'  # TODO: get type for osmapi elements ?osmapi.OsmApi.ParseOsm(element, element)["type"]
     if verbose:
         print(tags)
+        print("------------------------------------------------------")
 
     print(f"OSM id:{element_id}({element_type})\t https://osm.org/{element_type}/{element_id}" + Style.BRIGHT)
     for key, value in tags.items():
@@ -109,5 +110,4 @@ def update_element(element, tags, api):
             rel_data["tag"].update(tags)
             api.RelationUpdate(rel_data)
 
-    print("\n")
 
