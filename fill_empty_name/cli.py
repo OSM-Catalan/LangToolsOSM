@@ -15,8 +15,8 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     """Looks for features with «name:LANG» & without «name» tags and copy «name:LANG» value to «name»."""
     if not dry_run:
         api = lt.login_OSM(username=username)
-    changeset_tags = {u"comment": f"Fill empty name tags with name:{lang}",
-                      u"source": f"name:{lang} tag", u"created_by=": f"LangToolsOSM {__version__}"}
+    changeset_tags = {u"comment": f"Fill empty name tags with name:{lang} in {area} for {filters}",
+                      u"source": f"name:{lang} tag", u"created_by": f"LangToolsOSM {__version__}"}
     if verbose:
         print(changeset_tags)
 
@@ -31,7 +31,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
             tags["name"] = rn.tags["name:" + lang]
             if tags:
                 if changeset is None and not dry_run:
-                    api.ChangesetCreate(changeset_tags)
+                    changeset_id = api.ChangesetCreate(changeset_tags)
                     changeset = True
 
                 if not dry_run:
@@ -44,7 +44,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
             tags["name"] = rw.tags["name:" + lang]
             if tags:
                 if changeset is None and not dry_run:
-                    api.ChangesetCreate(changeset_tags)
+                    changeset_id = api.ChangesetCreate(changeset_tags)
                     changeset = True
 
                 if not dry_run:
@@ -57,11 +57,12 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
             tags["name"] = rr.tags["name:" + lang]
             if tags:
                 if changeset is None and not dry_run:
-                    api.ChangesetCreate(changeset_tags)
+                    changeset_id = api.ChangesetCreate(changeset_tags)
                     changeset = True
 
                 if not dry_run:
                     lt.update_element(element=rr, tags=tags, api=api)
 
     if changeset and not dry_run:
+        print(f'DONE! https://www.osm.org/changeset/{changeset_id}')
         api.ChangesetClose()
