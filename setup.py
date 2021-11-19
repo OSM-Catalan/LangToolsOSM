@@ -3,13 +3,14 @@
 from setuptools import setup, find_packages
 
 NAME = "LangToolsOSM"
-VERSION = "0.0.5"
+VERSION = "0.0.6"
 
 REQUIRES = [
     "click",
     "colorama",
     "osmapi",
     "overpy",
+    "pytablewriter",
     "requests",
     "tqdm"
 ]
