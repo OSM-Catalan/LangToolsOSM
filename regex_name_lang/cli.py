@@ -30,7 +30,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     regex = re.compile(find, )
     changeset = None
     n_edits = 0
-    for rn in tqdm(result.nodes):
+    for rn in tqdm(result.nodes + result.ways + result.relations):
         if "name" in rn.tags:
             tags = {}
             tags["name:" + lang] = regex.sub(replace, rn.tags["name"])
@@ -45,42 +45,6 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
 
                 if not dry_run:
                     committed = lt.update_element(element=rn, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
-
-    for rw in tqdm(result.ways):
-        if "name" in rw.tags:
-            tags = {}
-            tags["name:" + lang] = regex.sub(replace, rw.tags["name"])
-
-            if tags:
-                if not dry_run:
-                    print(f'Number of editions in the current changeset: {n_edits}')
-                lt.print_element(rw, verbose=verbose)
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
-
-                if not dry_run:
-                    committed = lt.update_element(element=rw, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
-
-    for rr in tqdm(result.relations):
-        if "name:" in rr.tags:
-            tags = {}
-            tags["name:" + lang] = regex.sub(replace, rr.tags["name"])
-
-            if tags:
-                if not dry_run:
-                    print(f'Number of editions in the current changeset: {n_edits}')
-                lt.print_element(rr, verbose=verbose)
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
-
-                if not dry_run:
-                    committed = lt.update_element(element=rr, tags=tags, api=api)
                     if committed:
                         n_edits = n_edits + 1
 

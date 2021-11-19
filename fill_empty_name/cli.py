@@ -25,7 +25,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     result = lt.get_overpass_result(area=area, filters=filters)
     changeset = None
     n_edits = 0
-    for rn in tqdm(result.nodes):
+    for rn in tqdm(result.nodes + result.ways + result.relations):
         if f"name:{lang}" in rn.tags:
             tags = {}
             if not dry_run:
@@ -39,40 +39,6 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
 
                 if not dry_run:
                     committed = lt.update_element(element=rn, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
-
-    for rw in tqdm(result.ways):
-        if f"name:{lang}" in rw.tags:
-            tags = {}
-            if not dry_run:
-                print(f'Number of editions in the current changeset: {n_edits}')
-            lt.print_element(rw, verbose=verbose)
-            tags["name"] = rw.tags["name:" + lang]
-            if tags:
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
-
-                if not dry_run:
-                    committed = lt.update_element(element=rw, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
-
-    for rr in tqdm(result.relations):
-        if f"name:{lang}" in rr.tags:
-            tags = {}
-            if not dry_run:
-                print(f'Number of editions in the current changeset: {n_edits}')
-            lt.print_element(rr, verbose=verbose)
-            tags["name"] = rr.tags["name:" + lang]
-            if tags:
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
-
-                if not dry_run:
-                    committed = lt.update_element(element=rr, tags=tags, api=api)
                     if committed:
                         n_edits = n_edits + 1
 
