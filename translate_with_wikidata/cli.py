@@ -120,7 +120,7 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                                                 'answer': {'value': None, 'committed': False},
                                                 'objects': []}})
                 if output:
-                    db[translations['id']]['objects'].append({'name': rn.tags['name'], 'type':rn._type_value,
+                    db[translations['id']]['objects'].append({'name': rn.tags['name'], 'type': rn._type_value,
                                                               'id': rn.id, 'modified': False})
             if verbose > 1:
                 print(translations['translations'])

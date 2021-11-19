@@ -1,9 +1,10 @@
 CLI tools to help with the localisation of OpenStreetMap.
 Edit ```name:LANG``` and ```name``` keys, always supervised by the user.
+See [Multilingual names](https://wiki.openstreetmap.org/wiki/Multilingual_names) for the OpenStreetMap rules and best practices. 
 
 # Requirements
 
-This tool requires the python3 intrepreter. You can find it here:
+This tool requires the python3 interpreter. You can find it here:
 https://www.python.org/downloads/
 
 # Installation

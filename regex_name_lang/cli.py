@@ -13,7 +13,7 @@ from tqdm import tqdm
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'~'{find}'][!'name:{lang}']""""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
-@click.option('--verbose', '-v', default=False, is_flag=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
+@click.option('--verbose', '-v', count=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
 def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username, verbose):
     """Look for features with «name» matching a regular expression and fill «name:LANG» with a modified version of «name» by a regular expression."""
     if not dry_run:
