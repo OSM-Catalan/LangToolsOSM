@@ -165,8 +165,8 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                         print('translation_options: ' + str(translation_options))
 
                     if translation_options:
-                        select_translation = input("Select translation ('-' to skip): ") or '0'
-                        while select_translation not in [str(x) for x in range(len(translation_options))] + ['-']:
+                        select_translation = input("Select translation ('-' to skip, 'e' to edit): ") or '0'
+                        while select_translation not in [str(x) for x in range(len(translation_options))] + ['-'] + ["e"]:
                             print('Enter a number from 0 to ' + str(len(translation_options) - 1))
                             select_translation = input("Select translation ('-' to skip): ") or '0'
 
@@ -181,10 +181,12 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                     else:
                         print(Fore.BLUE + 'SKIP: No translations from wikidata.' + Style.RESET_ALL)
                     continue
+                elif select_translation in 'e':
+                    tags["name:" + lang] = input(f'Enter a value for tag "name:{lang}": ')
                 else:
                     select_translation = int(select_translation)
                     tags["name:" + lang] = translation_options[select_translation]
-                    db[translations['id']]['answer']['value'] = translation_options[select_translation]
+                db[translations['id']]['answer']['value'] = tags["name:" + lang]
 
             if changeset is None and not dry_run:
                 changeset_id = api.ChangesetCreate(changeset_tags)
