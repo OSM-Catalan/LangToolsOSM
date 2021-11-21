@@ -9,44 +9,52 @@ import requests
 from tqdm import tqdm
 
 
-def get_translations(ident, lang) -> dict:
-    response = requests.get(f'https://www.wikidata.org/wiki/Special:EntityData/{ident}.json')
-    data = response.json()
-    ret = {}
-    wikidata_id = list(data['entities'].keys())[0]
-    ret['label'] = None
-    ret['aliases'] = None
-    if lang in data['entities'][wikidata_id]['labels'].keys():
-        ret['label'] = data['entities'][wikidata_id]['labels'][lang]
-    if lang in data['entities'][wikidata_id]['aliases'].keys():
-        ret['aliases'] = data['entities'][wikidata_id]['aliases'][lang]
+def get_translations_from_wikidata(ids, lang, batch_size=50) -> dict:
+    data = {}
+    for ndx in range(0, len(ids), batch_size):
+        batch_ids = ids[ndx:min(ndx + batch_size, len(ids))]
+        query = f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids={'|'.join(batch_ids)}&props=labels|aliases&languages={lang}&format=json"
+        response = requests.get(query)
+        batch_data = response.json()
+        if 'error' in batch_data.keys():
+            raise Exception('Wrong response from wikidata: ' + batch_data)
+        data.update(batch_data['entities'])
 
-    if not ret['label'] and not ret['aliases']:
-        ret = None
-    else:  # Generate new translation options
-        extra_translations = list_translations(ret)
-        # Remove brackets and the text inside
-        pattern = re.compile(r'\s*\(.+\)\s*')
-        for i in extra_translations:
-            if pattern.search(i):
-                if not ret['aliases']:
-                    ret['aliases'] = []
-                ret['aliases'].append({'lang': lang, 'value': pattern.sub('', i)})
+    out = {}
+    for wikidata_id, value in data.items():
+        translations = {}
+        translations['label'] = None
+        translations['aliases'] = None
+        if lang in value['labels'].keys():
+            translations['label'] = value['labels'][lang]
+        if lang in value['aliases'].keys():
+            translations['aliases'] = value['aliases'][lang]
 
-        extra_translations = list_translations(ret)
-        # Capitalize all words
-        for i in extra_translations:
-            if not i.title() == i:
-                if not ret['aliases']:
-                    ret['aliases'] = []
-                ret['aliases'].append({'lang': lang, 'value': i.title()})
+        if not translations['label'] and not translations['aliases']:
+            translations = None
+        else:  # Generate new translation options
+            extra_translations = list_translations(translations)
+            # Remove brackets and the text inside
+            pattern = re.compile(r'\s*\(.+\)\s*')
+            for i in extra_translations:
+                if pattern.search(i):
+                    if not translations['aliases']:
+                        translations['aliases'] = []
+                    translations['aliases'].append({'lang': lang, 'value': pattern.sub('', i)})
 
-    return {
-        'id': wikidata_id,
-        'translations': ret}
+            extra_translations = list_translations(translations)
+            # Capitalize all words
+            for i in extra_translations:
+                if not i.title() == i:
+                    if not translations['aliases']:
+                        translations['aliases'] = []
+                    translations['aliases'].append({'lang': lang, 'value': i.title()})
+
+        out.update({wikidata_id: {'translations': translations}})
+    return out
 
 
-def list_translations(translations):
+def list_translations(translations) -> list:
     if translations and translations['label']:
         translations_list = [translations['label']['value']]
     else:
@@ -86,7 +94,7 @@ def write_db(db, file, format='csv', table_name=None):
         print("I/O error")
 
 
-def db_item_row(db_key, db_item):
+def db_item_row(db_key, db_item) -> list:
     translation_list = list_translations(db_item['translations'])
     translations_str = ', '.join(translation_list)
     objects = [x['type'] + '|' + str(x['id']) for x in iter(db_item['objects'])]
@@ -122,8 +130,17 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
     print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
+    wikidata_ids = []
+    for osm_object in result.nodes + result.ways + result.relations:
+        if osm_object.tags['wikidata']:
+            wikidata_ids.append(osm_object.tags['wikidata'])
+    wikidata_ids = list(dict.fromkeys(wikidata_ids))  # dict keys -> unique in the same order
+    db = get_translations_from_wikidata(ids=wikidata_ids, lang=lang)
+    if output:
+        for key in db.keys():
+            db[key].update({'objects': [], 'answer': {'value': None, 'committed': False}})
+
     changeset = None
-    db = dict()
     n_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
@@ -133,13 +150,9 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                     db[translations['id']]['objects'].append({'name': osm_object.tags['name'], 'type': osm_object._type_value,
                                                               'id': osm_object.id, 'modified': False})
             else:
-                translations = get_translations(osm_object.tags['wikidata'], lang)
-                db.update({translations['id']: {'translations': translations['translations'],
-                                                'answer': {'value': None, 'committed': False},
-                                                'objects': []}})
-                if output:
-                    db[translations['id']]['objects'].append({'name': osm_object.tags['name'], 'type': osm_object._type_value,
-                                                              'id': osm_object.id, 'modified': False})
+                print('wikidata id: ' + osm_object.tags['wikidata'])
+                raise Exception('Something wrong while fetching the translations from wikidata.')
+
             if verbose > 2:
                 print(translations['translations'])
             if not dry_run:
