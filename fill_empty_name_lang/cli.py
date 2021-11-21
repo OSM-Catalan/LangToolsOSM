@@ -29,20 +29,20 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
     changeset = None
     n_edits = 0
     try:
-        for rn in tqdm(result.nodes + result.ways + result.relations):
-            if "name" in rn.tags:
+        for osm_object in tqdm(result.nodes + result.ways + result.relations):
+            if "name" in osm_object.tags:
                 tags = {}
-                tags["name:" + lang] = rn.tags["name"]
+                tags["name:" + lang] = osm_object.tags["name"]
 
                 if tags:
                     if not dry_run:
                         lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-                    lt.print_element(rn, verbose=verbose)
+                    lt.print_element(osm_object, verbose=verbose)
                     if changeset is None and not dry_run:
                         changeset = api.ChangesetCreate(changeset_tags)
 
                     if not dry_run:
-                        committed = lt.update_element(element=rn, tags=tags, api=api)
+                        committed = lt.update_element(element=osm_object, tags=tags, api=api)
                         if committed:
                             n_edits = n_edits + 1
                     else:

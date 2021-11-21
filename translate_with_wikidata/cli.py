@@ -126,20 +126,20 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
     db = dict()
     n_edits = 0
     try:
-        for rn in tqdm(result.nodes + result.ways + result.relations):
-            if rn.tags['wikidata'] in db.keys():
-                translations = {'id': rn.tags['wikidata'], 'translations': db[rn.tags['wikidata']]['translations']}
+        for osm_object in tqdm(result.nodes + result.ways + result.relations):
+            if osm_object.tags['wikidata'] in db.keys():
+                translations = {'id': osm_object.tags['wikidata'], 'translations': db[osm_object.tags['wikidata']]['translations']}
                 if output:
-                    db[translations['id']]['objects'].append({'name': rn.tags['name'], 'type': rn._type_value,
-                                                              'id': rn.id, 'modified': False})
+                    db[translations['id']]['objects'].append({'name': osm_object.tags['name'], 'type': osm_object._type_value,
+                                                              'id': osm_object.id, 'modified': False})
             else:
-                translations = get_translations(rn.tags['wikidata'], lang)
+                translations = get_translations(osm_object.tags['wikidata'], lang)
                 db.update({translations['id']: {'translations': translations['translations'],
                                                 'answer': {'value': None, 'committed': False},
                                                 'objects': []}})
                 if output:
-                    db[translations['id']]['objects'].append({'name': rn.tags['name'], 'type': rn._type_value,
-                                                              'id': rn.id, 'modified': False})
+                    db[translations['id']]['objects'].append({'name': osm_object.tags['name'], 'type': osm_object._type_value,
+                                                              'id': osm_object.id, 'modified': False})
             if verbose > 2:
                 print(translations['translations'])
             if not dry_run:
@@ -203,7 +203,7 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                 changeset = api.ChangesetCreate(changeset_tags)
 
             if not dry_run:
-                committed = lt.update_element(element=rn, tags=tags, api=api)
+                committed = lt.update_element(element=osm_object, tags=tags, api=api)
                 if committed:
                     n_edits = n_edits + 1
                     db[translations['id']]['answer']['committed'] = True

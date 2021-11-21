@@ -34,14 +34,14 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                 tags = {}
                 if not dry_run:
                     lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-                lt.print_element(rn, verbose=verbose)
-                tags["name"] = rn.tags["name:" + lang]
+                lt.print_element(osm_object, verbose=verbose)
+                tags["name"] = osm_object.tags["name:" + lang]
                 if tags:
                     if changeset is None and not dry_run:
                         changeset = api.ChangesetCreate(changeset_tags)
 
                     if not dry_run:
-                        committed = lt.update_element(element=rn, tags=tags, api=api)
+                        committed = lt.update_element(element=osm_object, tags=tags, api=api)
                         if committed:
                             n_edits = n_edits + 1
                     else:
