@@ -109,3 +109,17 @@ def update_element(element, tags, api):
             }
             rel_data["tag"].update(tags)
             return api.RelationUpdate(rel_data)
+
+
+def print_changeset_status(changeset, n_edits, verbose):
+    if n_edits < 195:
+        print(f'Number of editions in the current changeset: {n_edits}')
+    elif n_edits < 200:
+        print(
+            Fore.YELLOW + f'Number of editions in the current changeset: {n_edits} (> 200 is considered a mass modification)' + Style.RESET_ALL)
+    else:
+        print(
+            Fore.RED + f'Too much editions in the current changeset: {n_edits}(> 200 is considered a mass modification)')
+        print('Press "Ctrl-c" to STOP now.' + Style.RESET_ALL)
+    if verbose > 1 and changeset:
+        print(Fore.CYAN + f'Changeset opened: https://www.osm.org/changeset/{changeset}' + Style.RESET_ALL)

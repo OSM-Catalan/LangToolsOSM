@@ -15,36 +15,44 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
     """Looks for features with «name» & without «name:LANG» tags and copy «name» value to «name:LANG»."""
     if not dry_run:
         api = lt.login_OSM(username=username)
-    changeset_tags = {u"comment": f"Fill empty name:{lang} tags with name in {area} for {filters}",
-                      u"source": u"name tag", u"created_by": f"LangToolsOSM {__version__}"}
-    if verbose:
-        print(changeset_tags)
-
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
+    print('After the first object edition a changeset with the following tags will be created:')
+    changeset_tags = {u"comment": f"Fill empty name:{lang} tags with name in {area} for {filters}",
+                      u"source": u"name tag", u"created_by": f"LangToolsOSM {__version__}"}
+    print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
+    print('######################################################')
+    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
+    print('######################################################')
+
     changeset = None
     n_edits = 0
-    for rn in tqdm(result.nodes + result.ways + result.relations):
-        if "name" in rn.tags:
-            tags = {}
-            tags["name:" + lang] = rn.tags["name"]
+    try:
+        for rn in tqdm(result.nodes + result.ways + result.relations):
+            if "name" in rn.tags:
+                tags = {}
+                tags["name:" + lang] = rn.tags["name"]
 
-            if tags:
-                if not dry_run:
-                    print(f'Number of editions in the current changeset: {n_edits}')
-                lt.print_element(rn, verbose=verbose)
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
+                if tags:
+                    if not dry_run:
+                        lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+                    lt.print_element(rn, verbose=verbose)
+                    if changeset is None and not dry_run:
+                        changeset = api.ChangesetCreate(changeset_tags)
 
-                if not dry_run:
-                    committed = lt.update_element(element=rn, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
+                    if not dry_run:
+                        committed = lt.update_element(element=rn, tags=tags, api=api)
+                        if committed:
+                            n_edits = n_edits + 1
+                    else:
+                        print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
 
-    if changeset and not dry_run:
-        print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset_id}')
-        api.ChangesetClose()
-    else:
-        print('DONE! No change to OSM (--dry-run mode)')
+    finally:
+        if changeset and not dry_run:
+            print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset}')
+            api.ChangesetClose()
+        elif dry_run:
+            print('DONE! No change send to OSM (--dry-run).')
+        else:
+            print('DONE! No change send to OSM.')

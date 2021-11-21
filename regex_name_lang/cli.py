@@ -10,7 +10,7 @@ from tqdm import tqdm
 @click.option('--replace', prompt='Regular expression to replace object name and fill name:{LANG}', type=str, help='Regular expression to replace object name and fill name:{LANG}.')
 @click.option('--area', prompt='Bounding box (South,West,North,East), filters or the exact name value of an area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou").')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
-@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'~'{find}'][!'name:{lang}']""""")
+@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'~'{find}'][!'name:{lang}']".""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
@@ -18,38 +18,46 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     """Look for features with «name» matching a regular expression and fill «name:LANG» with a modified version of «name» by a regular expression."""
     if not dry_run:
         api = lt.login_OSM(username=username)
+    if not filters:
+        filters = f"nwr['name'~'{find}'][!'name:{lang}']"
+    print('After the first object edition a changeset with the following tags will be created:')
     changeset_tags = {u"comment": f"Fill empty name:{lang} tags with regex name:«" +
                                   find + f"» -> name:{lang}=«" + replace + f"»  in {area} for {filters}",
                       u"source": u"name tag", u"created_by": f"LangToolsOSM {__version__}"}
-    if verbose:
-        print(changeset_tags)
-
-    if not filters:
-        filters = f"nwr['name'~'{find}'][!'name:{lang}']"
+    print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
+    print('######################################################')
+    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
+    print('######################################################')
+
     regex = re.compile(find, )
     changeset = None
     n_edits = 0
-    for rn in tqdm(result.nodes + result.ways + result.relations):
-        if "name" in rn.tags:
-            tags = {}
-            tags["name:" + lang] = regex.sub(replace, rn.tags["name"])
+    try:
+        for rn in tqdm(result.nodes + result.ways + result.relations):
+            if "name" in rn.tags:
+                tags = {}
+                tags["name:" + lang] = regex.sub(replace, rn.tags["name"])
 
-            if tags:
-                if not dry_run:
-                    print(f'Number of editions in the current changeset: {n_edits}')
-                lt.print_element(rn, verbose=verbose)
-                if changeset is None and not dry_run:
-                    changeset_id = api.ChangesetCreate(changeset_tags)
-                    changeset = True
+                if tags:
+                    if not dry_run:
+                        lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+                    lt.print_element(rn, verbose=verbose)
+                    if changeset is None and not dry_run:
+                        changeset = api.ChangesetCreate(changeset_tags)
 
-                if not dry_run:
-                    committed = lt.update_element(element=rn, tags=tags, api=api)
-                    if committed:
-                        n_edits = n_edits + 1
+                    if not dry_run:
+                        committed = lt.update_element(element=rn, tags=tags, api=api)
+                        if committed:
+                            n_edits = n_edits + 1
+                    else:
+                        print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
 
-    if changeset and not dry_run:
-        print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset_id}')
-        api.ChangesetClose()
-    else:
-        print('DONE! No change to OSM (--dry-run mode)')
+    finally:
+        if changeset and not dry_run:
+            print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset}')
+            api.ChangesetClose()
+        elif dry_run:
+            print('DONE! No change send to OSM (--dry-run).')
+        else:
+            print('DONE! No change send to OSM.')
