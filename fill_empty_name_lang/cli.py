@@ -1,4 +1,5 @@
 import click
+from colorama import Fore, Style
 import lib.LangToolsOSM as lt
 from lib import __version__
 from tqdm import tqdm
@@ -14,7 +15,7 @@ from tqdm import tqdm
 def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose):
     """Looks for features with «name» & without «name:LANG» tags and copy «name» value to «name:LANG»."""
     if not dry_run:
-        api = lt.login_OSM(username=username)
+        api = lt.login_osm(username=username)
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
@@ -23,16 +24,15 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     changeset = None
     n_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if "name" in osm_object.tags:
-                tags = {}
-                tags["name:" + lang] = osm_object.tags["name"]
+            if 'name' in osm_object.tags:
+                tags = {'name:' + lang: osm_object.tags['name']}
 
                 if tags:
                     if not dry_run:
@@ -42,7 +42,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
                         changeset = api.ChangesetCreate(changeset_tags)
 
                     if not dry_run:
-                        committed = lt.update_element(element=osm_object, tags=tags, api=api)
+                        committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                         if committed:
                             n_edits = n_edits + 1
                     else:

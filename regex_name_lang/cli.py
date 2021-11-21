@@ -1,4 +1,5 @@
 import click
+from colorama import Fore, Style
 import lib.LangToolsOSM as lt
 from lib import __version__
 import re
@@ -17,7 +18,7 @@ from tqdm import tqdm
 def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username, verbose):
     """Look for features with «name» matching a regular expression and fill «name:LANG» with a modified version of «name» by a regular expression."""
     if not dry_run:
-        api = lt.login_OSM(username=username)
+        api = lt.login_osm(username=username)
     if not filters:
         filters = f"nwr['name'~'{find}'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
@@ -27,7 +28,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     regex = re.compile(find, )
@@ -35,9 +36,8 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     n_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if "name" in osm_object.tags:
-                tags = {}
-                tags["name:" + lang] = regex.sub(replace, osm_object.tags["name"])
+            if 'name' in osm_object.tags:
+                tags = {'name:' + lang: regex.sub(replace, osm_object.tags['name'])}
 
                 if tags:
                     if not dry_run:
@@ -47,7 +47,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
                         changeset = api.ChangesetCreate(changeset_tags)
 
                     if not dry_run:
-                        committed = lt.update_element(element=osm_object, tags=tags, api=api)
+                        committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                         if committed:
                             n_edits = n_edits + 1
                     else:

@@ -22,9 +22,7 @@ def get_translations_from_wikidata(ids, lang, batch_size=50) -> dict:
 
     out = {}
     for wikidata_id, value in data.items():
-        translations = {}
-        translations['label'] = None
-        translations['aliases'] = None
+        translations = {'label': None, 'aliases': None}
         if lang in value['labels'].keys():
             translations['label'] = value['labels'][lang]
         if lang in value['aliases'].keys():
@@ -64,11 +62,11 @@ def list_translations(translations) -> list:
     return translations_list
 
 
-def write_db(db, file, format='csv', table_name=None):
+def write_db(db, file, file_format='csv', table_name=None):
     headers = ['wikidata', 'nameOSM', 'answer', 'committed', 'translations', 'objects']
     try:
         with open(file, 'w', newline='') as f:
-            if format in 'csv':
+            if file_format in 'csv':
                 writer = csv.writer(f, dialect='unix', delimiter='\t')
                 if table_name:
                     writer.writerow(table_name)
@@ -76,7 +74,7 @@ def write_db(db, file, format='csv', table_name=None):
                 for wikidata, values in db.items():
                     row = db_item_row(wikidata, values)
                     writer.writerow(row)
-            elif format in 'mediawiki':
+            elif file_format in 'mediawiki':
                 writer = pytablewriter.MediaWikiTableWriter()
                 writer.stream = f
                 writer.headers = headers
@@ -118,7 +116,7 @@ def db_item_row(db_key, db_item) -> list:
 def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, output, output_format, username, verbose):
     """Add «name:LANG» selecting the label or alias from «wikidata»."""
     if not dry_run:
-        api = lt.login_OSM(username=username)
+        api = lt.login_osm(username=username)
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
@@ -127,7 +125,7 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + 'ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     wikidata_ids = []
@@ -157,12 +155,12 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                 print(translations['translations'])
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-
+            lt.print_element(osm_object, verbose=verbose)
             tags = {}
 
             if cache_answers and db[translations['id']]['answer']['committed']:
                 print(Fore.BLUE + 'Remembering your response...' + Style.RESET_ALL)
-                tags["name:" + lang] = db[translations['id']]['answer']['value']
+                tags['name:' + lang] = db[translations['id']]['answer']['value']
             else:
                 if (
                         cache_answers and db[translations['id']]['answer']['committed'] is None and
@@ -171,12 +169,12 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                     print(Fore.BLUE + 'Remembering your response... SKIP.' + Style.RESET_ALL)
                     continue
 
+                select_translation = '-'
                 if translations['translations']:
+                    translation_options = []
                     if translations['translations'] and translations['translations']['label']['value']:
                         print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
                         translation_options = [translations['translations']['label']['value']]
-                    else:
-                        translation_options = []
 
                     if translations['translations']['aliases']:
                         i = 1
@@ -193,9 +191,6 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                         while select_translation not in [str(x) for x in range(len(translation_options))] + ['-'] + ["e"]:
                             print('Enter a number from 0 to ' + str(len(translation_options) - 1))
                             select_translation = input("Select translation ('-' to skip): ") or '0'
-
-                else:
-                    select_translation = '-'
 
                 if select_translation in '-':
                     db[translations['id']]['answer']['value'] = '-'
@@ -216,7 +211,7 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
                 changeset = api.ChangesetCreate(changeset_tags)
 
             if not dry_run:
-                committed = lt.update_element(element=osm_object, tags=tags, api=api)
+                committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                 if committed:
                     n_edits = n_edits + 1
                     db[translations['id']]['answer']['committed'] = True
@@ -236,4 +231,4 @@ def translate_with_wikidatacommand(area, dry_run, cache_answers, filters, lang, 
         if output:
             table_name = f'Generated by LangToolsOSM {__version__} with parameters: lang={lang}, area={area}, ' \
                          f'filters={filters}, cache_answers={cache_answers}'
-            write_db(db, file=output, format=output_format, table_name=table_name)
+            write_db(db, file=output, file_format=output_format, table_name=table_name)

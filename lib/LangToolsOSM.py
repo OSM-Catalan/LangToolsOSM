@@ -6,7 +6,7 @@ import re
 import requests
 
 
-def login_OSM(username=None) -> osmapi.OsmApi:
+def login_osm(username=None) -> osmapi.OsmApi:
     if not username:
         username = input("User: ")
     password = getpass.getpass("Password: ")
@@ -30,7 +30,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         );
         out tags;
         """
-    elif re.search('^\[.+\]$', area):
+    elif re.search(r'^\[.+\]$', area):
         query = f"""
          area{area}->.searchArea;
          (
@@ -72,14 +72,14 @@ def print_element(element, remark='name', verbose=False):
     print("------------------------------------------------------")
 
 
-def update_element(element, tags, api):
-    if not isinstance(element, overpy.Element):
+def update_osm_object(osm_object, tags, api):
+    if not isinstance(osm_object, overpy.Element):
         raise TypeError("element must inherits 'overpy.Element'")
     print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
     allow_update = input("Add tags [Y/n]:")
     if allow_update in ["y", "Y", "yes", ""]:
-        if element._type_value in 'node':
-            node = api.NodeGet(element.id)
+        if osm_object._type_value in 'node':
+            node = api.NodeGet(osm_object.id)
             node_data = {
                 'id': node["id"],
                 'lat': node["lat"],
@@ -89,8 +89,8 @@ def update_element(element, tags, api):
             }
             node_data["tag"].update(tags)
             return api.NodeUpdate(node_data)
-        elif element._type_value in 'way':
-            way = api.WayGet(element.id)
+        elif osm_object._type_value in 'way':
+            way = api.WayGet(osm_object.id)
             way_data = {
                 'id': way["id"],
                 'nd': way["nd"],
@@ -99,8 +99,8 @@ def update_element(element, tags, api):
             }
             way_data["tag"].update(tags)
             return api.WayUpdate(way_data)
-        elif element._type_value in 'relation':
-            rel = api.RelationGet(element.id)
+        elif osm_object._type_value in 'relation':
+            rel = api.RelationGet(osm_object.id)
             rel_data = {
                 'id': rel["id"],
                 'member': rel["member"],
