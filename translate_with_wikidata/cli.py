@@ -10,27 +10,50 @@ from tqdm import tqdm
 
 
 def get_translations(ident, lang) -> dict:
-    response = requests.get(f"https://www.wikidata.org/wiki/Special:EntityData/{ident}.json")
+    response = requests.get(f'https://www.wikidata.org/wiki/Special:EntityData/{ident}.json')
     data = response.json()
     ret = {}
-    wikidata_id = list(data["entities"].keys())[0]
+    wikidata_id = list(data['entities'].keys())[0]
+    ret['label'] = None
+    ret['aliases'] = None
+    if lang in data['entities'][wikidata_id]['labels'].keys():
+        ret['label'] = data['entities'][wikidata_id]['labels'][lang]
+    if lang in data['entities'][wikidata_id]['aliases'].keys():
+        ret['aliases'] = data['entities'][wikidata_id]['aliases'][lang]
 
-    if lang in data["entities"][wikidata_id]["labels"].keys():
-        ret["label"] = data["entities"][wikidata_id]["labels"][lang]
-    else:
-        ret["label"] = None
-
-    if lang in data["entities"][wikidata_id]["aliases"].keys():
-        ret["aliases"] = data["entities"][wikidata_id]["aliases"][lang]
-    else:
-        ret["aliases"] = None
-
-    if not ret["label"] and not ret['aliases']:
+    if not ret['label'] and not ret['aliases']:
         ret = None
+    else:  # Generate new translation options
+        extra_translations = list_translations(ret)
+        # Remove brackets and the text inside
+        pattern = re.compile(r'\s*\(.+\)\s*')
+        for i in extra_translations:
+            if pattern.search(i):
+                if not ret['aliases']:
+                    ret['aliases'] = []
+                ret['aliases'].append({'lang': lang, 'value': pattern.sub('', i)})
+
+        extra_translations = list_translations(ret)
+        # Capitalize all words
+        for i in extra_translations:
+            if not i.title() == i:
+                if not ret['aliases']:
+                    ret['aliases'] = []
+                ret['aliases'].append({'lang': lang, 'value': i.title()})
 
     return {
-        "id": wikidata_id,
-        "translations": ret}
+        'id': wikidata_id,
+        'translations': ret}
+
+
+def list_translations(translations):
+    if translations and translations['label']:
+        translations_list = [translations['label']['value']]
+    else:
+        translations_list = []
+    if translations and translations['aliases']:
+        translations_list = translations_list + [x['value'] for x in translations['aliases']]
+    return translations_list
 
 
 def write_db(db, file, format='csv', table_name=None):
@@ -51,7 +74,7 @@ def write_db(db, file, format='csv', table_name=None):
                 writer.headers = headers
                 writer.table_name = table_name
                 matrix = []
-                pattern = re.compile(r'((node|way|relation)\|[0-9]+),')
+                pattern = re.compile(r'((node|way|relation)\|[0-9]+),*')
                 for wikidata, values in db.items():
                     row = db_item_row(wikidata, values)
                     row[0] = f'[https://www.wikidata.org/wiki/{row[0]} {row[0]}]'
@@ -64,16 +87,11 @@ def write_db(db, file, format='csv', table_name=None):
 
 
 def db_item_row(db_key, db_item):
-    if db_item['translations'] and db_item['translations']['label']:
-        translations_str = [db_item['translations']['label']['value']]
-    else:
-        translations_str = []
-    if db_item['translations'] and db_item['translations']['aliases']:
-        translations_str = translations_str + [x['value'] for x in db_item['translations']['aliases']]
-    translations_str = ', '.join(translations_str)
+    translation_list = list_translations(db_item['translations'])
+    translations_str = ', '.join(translation_list)
     objects = [x['type'] + '|' + str(x['id']) for x in iter(db_item['objects'])]
     objects = ', '.join(objects)
-    names = list(set([x['name'] for x in iter(db_item['objects'])]))  # set -> items are unique
+    names = list(dict.fromkeys([x['name'] for x in iter(db_item['objects'])]))  # dict keys -> unique in the same order
     names = ', '.join(names)
     row = [db_key, names, db_item['answer']['value'], str(db_item['answer']['committed']), translations_str, objects]
     return row
