@@ -69,7 +69,7 @@ def write_db(db, file, file_format='csv', table_name=None):
             if file_format in 'csv':
                 writer = csv.writer(f, dialect='unix', delimiter='\t')
                 if table_name:
-                    writer.writerow(table_name)
+                    writer.writerow([table_name])
                 writer.writerow(headers)
                 for wikidata, values in db.items():
                     row = db_item_row(wikidata, values)
