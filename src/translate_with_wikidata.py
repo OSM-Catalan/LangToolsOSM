@@ -1,7 +1,7 @@
 import click
 import csv
 from colorama import Fore, Style
-import lib.LangToolsOSM as lt
+import lib.osm_utils as lt
 from lib import __version__
 import pytablewriter
 import re
@@ -149,6 +149,8 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                                                               'id': osm_object.id, 'modified': False})
             else:
                 print('wikidata id: ' + osm_object.tags['wikidata'])
+                # import json
+                # print(json.dumps(db['osm_object.tags['wikidata']'], indent=4))
                 raise Exception('Something wrong while fetching the translations from wikidata.')
 
             if verbose > 2:

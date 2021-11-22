@@ -1,6 +1,6 @@
 import click
 from colorama import Fore, Style
-import lib.LangToolsOSM as lt
+import lib.osm_utils as lt
 from lib import __version__
 from tqdm import tqdm
 
