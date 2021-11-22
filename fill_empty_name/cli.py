@@ -24,7 +24,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     changeset = None
@@ -35,7 +35,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                 tags = {}
                 if not dry_run:
                     lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-                lt.print_element(osm_object, verbose=verbose)
+                lt.print_osm_object(osm_object, verbose=verbose)
                 tags["name"] = osm_object.tags["name:" + lang]
                 if tags:
                     if changeset is None and not dry_run:

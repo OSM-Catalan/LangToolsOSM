@@ -28,7 +28,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     regex = re.compile(find, )
@@ -42,7 +42,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
                 if tags:
                     if not dry_run:
                         lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-                    lt.print_element(osm_object, verbose=verbose)
+                    lt.print_osm_object(osm_object, verbose=verbose)
                     if changeset is None and not dry_run:
                         changeset = api.ChangesetCreate(changeset_tags)
 

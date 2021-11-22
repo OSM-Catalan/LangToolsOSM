@@ -51,20 +51,20 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
     return result
 
 
-def print_element(element, remark='name', verbose=False):
-    if isinstance(element, overpy.Element):  # overpass element
-        tags = element.tags
-        element_id = element.id
-        element_type = element._type_value
-    else:  # osmapi element
-        tags = element['tag']
-        element_id = element['id']
-        element_type = '???'  # TODO: get type for osmapi elements ?osmapi.OsmApi.ParseOsm(element, element)["type"]
+def print_osm_object(osm_object, remark='name', verbose=False):
+    if isinstance(osm_object, overpy.Element):  # overpass object
+        tags = osm_object.tags
+        osm_id = osm_object.id
+        osm_type = osm_object._type_value
+    else:  # osmapi object
+        tags = osm_object['tag']
+        osm_id = osm_object['id']
+        osm_type = '???'  # TODO: get type for osmapi objects ?osmapi.OsmApi.ParseOsm(element, element)["type"]
     if verbose:
         print(tags)
         print("------------------------------------------------------")
 
-    print(f"OSM id:{element_id}({element_type})\t https://osm.org/{element_type}/{element_id}" + Style.BRIGHT)
+    print(f"OSM id:{osm_id}({osm_type})\t https://osm.org/{osm_type}/{osm_id}" + Style.BRIGHT)
     for key, value in tags.items():
         if key.startswith(remark):
             print(key + "=" + value, end=", ")

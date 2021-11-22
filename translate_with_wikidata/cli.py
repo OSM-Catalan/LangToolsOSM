@@ -109,7 +109,7 @@ def db_item_row(db_key, db_item) -> list:
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']".""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
-@click.option('--output', type=click.Path(dir_okay=False, writable=True), help='Path of the file to write db of wikidata translations and user answers.')
+@click.option('--output', type=click.Path(dir_okay=False, writable=True), help='Path of the file to write the db of wikidata translations and user answers.')
 @click.option('--output-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the output file.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
@@ -125,7 +125,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes ' + str(len(result.ways)) + ' ways; ' + str(len(result.relations)) + ' relations found.')
+    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
     print('######################################################')
 
     wikidata_ids = []
@@ -155,7 +155,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 print(translations['translations'])
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-            lt.print_element(osm_object, verbose=verbose)
+            lt.print_osm_object(osm_object, verbose=verbose)
             tags = {}
 
             if remember_answers and db[translations['id']]['answer']['committed']:
