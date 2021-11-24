@@ -22,9 +22,9 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
     if not filters:
         filters = f"nwr['name'~'{find}'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
-    changeset_tags = {u"comment": f"Fill empty name:{lang} tags with regex name:«" +
-                                  find + f"» -> name:{lang}=«" + replace + f"»  in {area} for {filters}",
-                      u"source": u"name tag", u"created_by": f"LangToolsOSM {__version__}"}
+    changeset_tags = {u'comment': f'Fill empty name:{lang} tags with regex name:«' +
+                                  find + f'» -> name:{lang}=«' + replace + f'»  in {area} for {filters}',
+                      u'source': u'name tag', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
@@ -51,7 +51,7 @@ def regex_name_langcommand(find, replace, area, dry_run, filters, lang, username
                         if committed:
                             n_edits = n_edits + 1
                     else:
-                        print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
+                        print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
 
     finally:
         if changeset and not dry_run:

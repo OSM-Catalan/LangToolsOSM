@@ -19,8 +19,8 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
-    changeset_tags = {u"comment": f"Fill empty name:{lang} tags with name in {area} for {filters}",
-                      u"source": u"name tag", u"created_by": f"LangToolsOSM {__version__}"}
+    changeset_tags = {u'comment': f'Fill empty name:{lang} tags with name in {area} for {filters}',
+                      u'source': u'name tag', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
@@ -46,7 +46,7 @@ def fill_empty_name_langcommand(area, dry_run, filters, lang, username, verbose)
                         if committed:
                             n_edits = n_edits + 1
                     else:
-                        print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
+                        print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
 
     finally:
         if changeset and not dry_run:

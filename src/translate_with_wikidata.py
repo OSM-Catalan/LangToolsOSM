@@ -89,7 +89,7 @@ def write_db(db, file, file_format='csv', table_name=None):
                 writer.value_matrix = matrix
                 writer.write_table()
     except IOError:
-        print("I/O error")
+        print('I/O error')
 
 
 def db_item_row(db_key, db_item) -> list:
@@ -120,12 +120,14 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
-    changeset_tags = {u"comment": f"Fill empty name:{lang} tags translations from wikidata in {area} for {filters}",
-                      u"source": u"wikidata", u"created_by": f"LangToolsOSM {__version__}"}
+    changeset_tags = {u'comment': f'Fill empty name:{lang} tags translations from wikidata in {area} for {filters}',
+                      u'source': u'wikidata', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
+    n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
+    print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
+          f' ways and {str(len(result.relations))} relations).')
     print('######################################################')
 
     wikidata_ids = []
@@ -143,9 +145,11 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
             if osm_object.tags['wikidata'] in db.keys():
-                translations = {'id': osm_object.tags['wikidata'], 'translations': db[osm_object.tags['wikidata']]['translations']}
+                translations = {'id': osm_object.tags['wikidata'],
+                                'translations': db[osm_object.tags['wikidata']]['translations']}
                 if output:
-                    db[translations['id']]['objects'].append({'name': osm_object.tags['name'], 'type': osm_object._type_value,
+                    db[translations['id']]['objects'].append({'name': osm_object.tags['name'],
+                                                              'type': osm_object._type_value,
                                                               'id': osm_object.id, 'modified': False})
             else:
                 print('wikidata id: ' + osm_object.tags['wikidata'])
@@ -175,7 +179,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 if translations['translations']:
                     translation_options = []
                     if translations['translations'] and translations['translations']['label']['value']:
-                        print(Style.BRIGHT + f"0 = " + translations['translations']['label']['value'] + Style.RESET_ALL)
+                        print(Style.BRIGHT + '0 = ' + translations['translations']['label']['value'] + Style.RESET_ALL)
                         translation_options = [translations['translations']['label']['value']]
 
                     if translations['translations']['aliases']:
@@ -189,10 +193,10 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                         print('translation_options: ' + str(translation_options))
 
                     if translation_options:
-                        select_translation = input("Select translation ('-' to skip, 'e' to edit): ") or '0'
-                        while select_translation not in [str(x) for x in range(len(translation_options))] + ['-'] + ["e"]:
+                        select_translation = input('Select translation ("-" to skip, "e" to edit): ') or '0'
+                        while select_translation not in [str(x) for x in range(len(translation_options))] + ['-'] + ['e']:
                             print('Enter a number from 0 to ' + str(len(translation_options) - 1))
-                            select_translation = input("Select translation ('-' to skip): ") or '0'
+                            select_translation = input('Select translation ("-" to skip, "e" to edit): ') or '0'
 
                 if select_translation in '-':
                     db[translations['id']]['answer']['value'] = '-'
@@ -203,11 +207,11 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                         print(Fore.BLUE + 'SKIP: No translations from wikidata.' + Style.RESET_ALL)
                     continue
                 elif select_translation in 'e':
-                    tags["name:" + lang] = input(f'Enter a value for tag "name:{lang}": ')
+                    tags['name:' + lang] = input(f'Enter a value for tag "name:{lang}": ')
                 else:
                     select_translation = int(select_translation)
-                    tags["name:" + lang] = translation_options[select_translation]
-                db[translations['id']]['answer']['value'] = tags["name:" + lang]
+                    tags['name:' + lang] = translation_options[select_translation]
+                db[translations['id']]['answer']['value'] = tags['name:' + lang]
 
             if changeset is None and not dry_run:
                 changeset = api.ChangesetCreate(changeset_tags)
@@ -231,6 +235,6 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
             print('DONE! No change send to OSM.')
 
         if output:
-            table_name = f'Generated by LangToolsOSM {__version__} with parameters: lang={lang}, area={area}, ' \
+            table_name = f'# Generated by LangToolsOSM {__version__} with parameters: lang={lang}, area={area}, ' \
                          f'filters={filters}, remember_answers={remember_answers}'
             write_db(db, file=output, file_format=output_format, table_name=table_name)

@@ -19,8 +19,8 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     if not filters:
         filters = f"nwr['name:{lang}'][!'name']"
     print('After the first object edition a changeset with the following tags will be created:')
-    changeset_tags = {u"comment": f"Fill empty name tags with name:{lang} in {area} for {filters}",
-                      u"source": f"name:{lang} tag", u"created_by": f"LangToolsOSM {__version__}"}
+    changeset_tags = {u'comment': f'Fill empty name tags with name:{lang} in {area} for {filters}',
+                      u'source': f'name:{lang} tag', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
     print('######################################################')
@@ -31,12 +31,12 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
     n_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if f"name:{lang}" in osm_object.tags:
+            if f'name:{lang}' in osm_object.tags:
                 tags = {}
                 if not dry_run:
                     lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
                 lt.print_osm_object(osm_object, verbose=verbose)
-                tags["name"] = osm_object.tags["name:" + lang]
+                tags['name'] = osm_object.tags['name:' + lang]
                 if tags:
                     if changeset is None and not dry_run:
                         changeset = api.ChangesetCreate(changeset_tags)
@@ -46,7 +46,7 @@ def fill_empty_namecommand(area, dry_run, filters, lang, username, verbose):
                         if committed:
                             n_edits = n_edits + 1
                     else:
-                        print(Fore.GREEN + Style.BRIGHT + "\n+ " + str(tags) + Style.RESET_ALL)
+                        print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
 
     finally:
         if changeset and not dry_run:
