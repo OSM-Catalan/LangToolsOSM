@@ -123,4 +123,4 @@ def print_changeset_status(changeset, n_edits, verbose):
                          '(> 200 is considered a mass modification)')
         print('Press "Ctrl-c" to STOP now.' + Style.RESET_ALL)
     if verbose > 1 and changeset:
-        print(Fore.CYAN + f'Changeset opened: https://www.osm.org/changeset/{changeset}' + Style.RESET_ALL)
+        print(Fore.LIGHTBLACK_EX + f'Changeset opened: https://www.osm.org/changeset/{changeset}' + Style.RESET_ALL)

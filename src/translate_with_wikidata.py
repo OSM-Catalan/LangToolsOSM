@@ -36,6 +36,8 @@ def write_db(db, file, file_format='csv', table_name=None):
                     matrix.append(row)
                 writer.value_matrix = matrix
                 writer.write_table()
+            else:
+                raise ValueError('File format must be "csv" or "mediawiki".')
     except IOError:
         print('I/O error')
 
@@ -105,7 +107,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 raise Exception('Something wrong while fetching the translations from wikidata.')
 
             if verbose > 2:
-                print(translations['translations'])
+                print(Fore.LIGHTBLACK_EX + ', '.join(wt.list_translations(translations['translations'])) + Style.RESET_ALL)
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
             lt.print_osm_object(osm_object, verbose=verbose)
@@ -149,7 +151,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                             i = i + 1
 
                     if verbose > 2:
-                        print('translation_options: ' + str(translation_options))
+                        print(Fore.LIGHTBLACK_EX + 'translation_options: ' + str(translation_options) + Style.RESET_ALL)
 
                     if translation_options:
                         select_translation = input('Select translation ("-" to skip, "e" to edit): ') or '0'
