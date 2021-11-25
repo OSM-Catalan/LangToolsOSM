@@ -2,64 +2,12 @@ import click
 import csv
 from colorama import Fore, Style
 import lib.osm_utils as lt
+import lib.wikidata_translations as wt
 from lib import __version__
 import pytablewriter
 import re
 import requests
 from tqdm import tqdm
-
-
-def get_translations_from_wikidata(ids, lang, batch_size=50) -> dict:
-    data = {}
-    for ndx in range(0, len(ids), batch_size):
-        batch_ids = ids[ndx:min(ndx + batch_size, len(ids))]
-        query = f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids={'|'.join(batch_ids)}&props=labels|aliases&languages={lang}&format=json"
-        response = requests.get(query)
-        batch_data = response.json()
-        if 'error' in batch_data.keys():
-            raise Exception('Wrong response from wikidata: ' + batch_data)
-        data.update(batch_data['entities'])
-
-    out = {}
-    for wikidata_id, value in data.items():
-        translations = {'label': None, 'aliases': None}
-        if lang in value['labels'].keys():
-            translations['label'] = value['labels'][lang]
-        if lang in value['aliases'].keys():
-            translations['aliases'] = value['aliases'][lang]
-
-        if not translations['label'] and not translations['aliases']:
-            translations = None
-        else:  # Generate new translation options
-            extra_translations = list_translations(translations)
-            # Remove brackets and the text inside
-            pattern = re.compile(r'\s*\(.+\)\s*')
-            for i in extra_translations:
-                if pattern.search(i):
-                    if not translations['aliases']:
-                        translations['aliases'] = []
-                    translations['aliases'].append({'lang': lang, 'value': pattern.sub('', i)})
-
-            extra_translations = list_translations(translations)
-            # Capitalize all words
-            for i in extra_translations:
-                if not i.title() == i:
-                    if not translations['aliases']:
-                        translations['aliases'] = []
-                    translations['aliases'].append({'lang': lang, 'value': i.title()})
-
-        out.update({wikidata_id: {'translations': translations}})
-    return out
-
-
-def list_translations(translations) -> list:
-    if translations and translations['label']:
-        translations_list = [translations['label']['value']]
-    else:
-        translations_list = []
-    if translations and translations['aliases']:
-        translations_list = translations_list + [x['value'] for x in translations['aliases']]
-    return translations_list
 
 
 def write_db(db, file, file_format='csv', table_name=None):
@@ -93,7 +41,7 @@ def write_db(db, file, file_format='csv', table_name=None):
 
 
 def db_item_row(db_key, db_item) -> list:
-    translation_list = list_translations(db_item['translations'])
+    translation_list = wt.list_translations(db_item['translations'])
     translations_str = ', '.join(translation_list)
     objects = [x['type'] + '|' + str(x['id']) for x in iter(db_item['objects'])]
     objects = ', '.join(objects)
@@ -134,11 +82,10 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
     for osm_object in result.nodes + result.ways + result.relations:
         if osm_object.tags['wikidata']:
             wikidata_ids.append(osm_object.tags['wikidata'])
-    wikidata_ids = list(dict.fromkeys(wikidata_ids))  # dict keys -> unique in the same order
-    db = get_translations_from_wikidata(ids=wikidata_ids, lang=lang)
-    if output:
-        for key in db.keys():
-            db[key].update({'objects': [], 'answer': {'value': None, 'committed': False}})
+    wikidata_unique_ids = list(dict.fromkeys(wikidata_ids))  # dict keys -> unique in the same order
+    db = wt.get_translations_from_wikidata(ids=wikidata_unique_ids, lang=lang)
+    for key in db.keys():
+        db[key].update({'objects': [], 'answer': {'value': None, 'committed': False}})
 
     changeset = None
     n_edits = 0
