@@ -125,12 +125,24 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 select_translation = '-'
                 if translations['translations']:
                     translation_options = []
-                    if translations['translations'] and translations['translations']['label']['value']:
-                        print(Style.BRIGHT + '0 = ' + translations['translations']['label']['value'] + Style.RESET_ALL)
-                        translation_options = [translations['translations']['label']['value']]
+                    i = 0
+                    if translations['translations']['wikipedia'] and translations['translations']['wikipedia']['title']:
+                        print(Style.BRIGHT + Fore.CYAN + str(i) + ' = ' + translations['translations']['wikipedia']['title'] + Style.RESET_ALL)
+                        translation_options.append(translations['translations']['wikipedia']['title'])
+                        i = i + 1
+
+                    if translations['translations']['extra']:
+                        for alias in translations['translations']['extra']:
+                            print(str(i) + ' = ' + alias['value'])
+                            translation_options.append(alias['value'])
+                            i = i + 1
+
+                    if translations['translations']['label'] and translations['translations']['label']['value']:
+                        print(Style.BRIGHT + str(i) + ' = ' + translations['translations']['label']['value'] + Style.RESET_ALL)
+                        translation_options.append(translations['translations']['label']['value'])
+                        i = i + 1
 
                     if translations['translations']['aliases']:
-                        i = 1
                         for alias in translations['translations']['aliases']:
                             print(str(i) + ' = ' + alias['value'])
                             translation_options.append(alias['value'])
