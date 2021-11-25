@@ -86,8 +86,23 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
             wikidata_ids.append(osm_object.tags['wikidata'])
     wikidata_unique_ids = list(dict.fromkeys(wikidata_ids))  # dict keys -> unique in the same order
     db = wt.get_translations_from_wikidata(ids=wikidata_unique_ids, lang=lang)
+    n_translations = 0
+    n_objects_with_translations = 0
     for key in db.keys():
         db[key].update({'objects': [], 'answer': {'value': None, 'committed': False}})
+        if db[key]['translations']:
+            n_translations = n_translations + 1
+            n_objects_with_translations = n_objects_with_translations + wikidata_ids.count(key)
+    percent_objects_with_translations = round(n_objects_with_translations / n_objects * 100)
+    print(f'{n_translations} translations available from wikidata for {n_objects_with_translations}'
+          f' OSM objects ({percent_objects_with_translations}%).')
+    print('######################################################')
+    if n_objects_with_translations > 200:
+        print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
+                         'Reduce the area or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
+    start = input('Start translating [Y/n]: ').lower()
+    if start not in ['y', 'yes', '']:
+        exit()
 
     changeset = None
     n_edits = 0
@@ -187,8 +202,11 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                     db[translations['id']]['objects'].append(object_db)
 
     finally:
+        print('######################################################')
         if changeset and not dry_run:
-            print(f'DONE! {n_edits} objects modified https://www.osm.org/changeset/{changeset}')
+            print(f'DONE! {n_edits} objects modified from {n_objects_with_translations}'
+                  f' objects with available translations ({round(n_edits / n_objects_with_translations * 100)}%)'
+                  f' https://www.osm.org/changeset/{changeset}')
             api.ChangesetClose()
         elif dry_run:
             print('DONE! No change send to OSM (--dry-run).')
