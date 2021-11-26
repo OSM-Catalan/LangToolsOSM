@@ -1,10 +1,8 @@
-import csv
-import pytablewriter
 import re
 import requests
 
 
-def get_translations_from_wikidata(ids, lang, batch_size=50) -> dict:
+def get_translations_from_wikidata(ids: list, lang: str, batch_size=50) -> dict:
     data = {}
     for ndx in range(0, len(ids), batch_size):
         batch_ids = ids[ndx:min(ndx + batch_size, len(ids))]
@@ -57,7 +55,7 @@ def get_translations_from_wikidata(ids, lang, batch_size=50) -> dict:
     return out
 
 
-def list_translations(translations) -> list:
+def list_translations(translations: dict) -> list:
     translations_list = []
     if translations:
         if translations['wikipedia']:

@@ -52,7 +52,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
 
 
 def print_osm_object(osm_object, remark='name', verbose=False):
-    if isinstance(osm_object, overpy.Element):  # overpass object
+    if isinstance(osm_object, overpy.Element):  # overpy object
         tags = osm_object.tags
         osm_id = osm_object.id
         osm_type = osm_object._type_value
@@ -72,7 +72,7 @@ def print_osm_object(osm_object, remark='name', verbose=False):
     print("------------------------------------------------------")
 
 
-def update_osm_object(osm_object, tags, api):
+def update_osm_object(osm_object: overpy.Element, tags: dict, api: osmapi.OsmApi) -> dict:
     if not isinstance(osm_object, overpy.Element):
         raise TypeError('osm_object must inherits "overpy.Element"')
     print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
@@ -111,7 +111,7 @@ def update_osm_object(osm_object, tags, api):
             return api.RelationUpdate(rel_data)
 
 
-def print_changeset_status(changeset, n_edits, verbose):
+def print_changeset_status(changeset: dict, n_edits: int, verbose: int):
     if n_edits < 195:
         print(f'Number of editions in the current changeset: {n_edits}')
     elif n_edits < 200:
