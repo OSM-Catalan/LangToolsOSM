@@ -1,13 +1,13 @@
 import click
 import csv
+import re
+import pytablewriter
 from colorama import Fore, Style
+from tqdm import tqdm
+
 import lib.osm_utils as lt
 import lib.wikidata_translations as wt
 from lib import __version__
-import pytablewriter
-import re
-import requests
-from tqdm import tqdm
 
 
 def write_db(db, file, file_format='csv', table_name=None):

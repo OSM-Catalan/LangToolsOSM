@@ -1,9 +1,8 @@
-from colorama import Fore, Style
 import getpass
 import osmapi
 import overpy
 import re
-import requests
+from colorama import Fore, Style
 
 
 def login_osm(username=None) -> osmapi.OsmApi:
