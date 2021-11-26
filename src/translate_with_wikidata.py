@@ -122,7 +122,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 raise Exception('Something wrong while fetching the translations from wikidata.')
 
             if verbose > 2:
-                print(Fore.LIGHTBLACK_EX + ', '.join(wt.list_translations(translations['translations'])) + Style.RESET_ALL)
+                print(Fore.LIGHTBLACK_EX + 'translations: ' + ', '.join(wt.list_translations(translations['translations'])) + Style.RESET_ALL)
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
             lt.print_osm_object(osm_object, verbose=verbose)

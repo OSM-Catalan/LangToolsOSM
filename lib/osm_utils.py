@@ -63,7 +63,11 @@ def print_osm_object(osm_object, remark='name', verbose=False):
         print(tags)
         print('------------------------------------------------------')
 
-    print(f'OSM id:{osm_id}({osm_type})\t https://osm.org/{osm_type}/{osm_id}' + Style.BRIGHT)
+    if 'wikidata' in tags.keys():
+        wikidata_url = '\t https://wikidata.org/wiki/' + tags['wikidata']
+    else:
+        wikidata_url = ''
+    print(f'OSM id:{osm_id}({osm_type})\t https://osm.org/{osm_type}/{osm_id}' + wikidata_url + Style.BRIGHT)
     for key, value in tags.items():
         if key.startswith(remark):
             print(key + '=' + value, end=', ')
@@ -116,10 +120,10 @@ def print_changeset_status(changeset: dict, n_edits: int, verbose: int):
     elif n_edits < 200:
         print(
             Fore.YELLOW + f'Number of editions in the current changeset: {n_edits}'
-                          ' (> 200 is considered a mass modification)' + Style.RESET_ALL)
+                          ' (> 200 is considered a mass modification in OSMCha)' + Style.RESET_ALL)
     else:
         print(Fore.RED + f'Too much editions in the current changeset: {n_edits}'
-                         '(> 200 is considered a mass modification)')
+                         '(> 200 is considered a mass modification in OSMCha)')
         print('Press "Ctrl-c" to STOP now.' + Style.RESET_ALL)
     if verbose > 1 and changeset:
         print(Fore.LIGHTBLACK_EX + f'Changeset opened: https://www.osm.org/changeset/{changeset}' + Style.RESET_ALL)
