@@ -93,7 +93,13 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
         if db[key]['translations']:
             n_translations = n_translations + 1
             n_objects_with_translations = n_objects_with_translations + wikidata_ids.count(key)
-    percent_objects_with_translations = round(n_objects_with_translations / n_objects * 100)
+    if n_objects_with_translations > 0:
+        percent_objects_with_translations = round(n_objects_with_translations / n_objects * 100)
+    else:
+        percent_objects_with_translations = 0
+        print(f'{n_translations} translations available from wikidata. Nothing to work on here.')
+        print('######################################################')
+        exit()
     print(f'{n_translations} translations available from wikidata for {n_objects_with_translations}'
           f' OSM objects ({percent_objects_with_translations}%).')
     print('######################################################')
@@ -132,15 +138,15 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 print(Fore.BLUE + 'Remembering your answer...' + Style.RESET_ALL)
                 tags['name:' + lang] = db[translations['id']]['answer']['value']
             else:
-                if (
-                        remember_answers and db[translations['id']]['answer']['committed'] is None and
-                        db[translations['id']]['answer']['value'] == '-'
-                ):
-                    print(Fore.BLUE + 'Remembering your answer... SKIP.' + Style.RESET_ALL)
-                    continue
-
                 select_translation = '-'
                 if translations['translations']:
+                    if (
+                            remember_answers and db[translations['id']]['answer']['committed'] is None and
+                            db[translations['id']]['answer']['value'] == '-'
+                    ):
+                        print(Fore.BLUE + 'Remembering your answer... SKIP.' + Style.RESET_ALL)
+                        continue
+
                     translation_options = []
                     i = 0
                     if translations['translations']['wikipedia'] and translations['translations']['wikipedia']['title']:
