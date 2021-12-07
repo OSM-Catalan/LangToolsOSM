@@ -59,11 +59,12 @@ def db_item_row(db_key, db_item) -> list:
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']".""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
+@click.option('--name-as-option', default=False, is_flag=True, help='Offer "name" value as an option to fill "name:lang". Useful for areas where "name" is in the language you want to fill "name:lang". See also fill_empty_name_lang program.')
 @click.option('--output', type=click.Path(dir_okay=False, writable=True), help='Path of the file to write the db of wikidata translations and user answers.')
 @click.option('--output-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the output file.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lang, output, output_format, username, verbose):
+def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lang, name_as_option, output, output_format, username, verbose):
     """Add «name:LANG» selecting the label or alias from «wikidata»."""
     if not dry_run:
         api = lt.login_osm(username=username)
@@ -170,6 +171,11 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                             print(str(i) + ' = ' + alias['value'])
                             translation_options.append(alias['value'])
                             i = i + 1
+
+                    if name_as_option and osm_object.tags['name']:
+                        print(Fore.YELLOW + str(i) + ' = ' + osm_object.tags['name'] + Style.RESET_ALL)
+                        translation_options.append(osm_object.tags['name'])
+                        i = i + 1
 
                     if verbose > 2:
                         print(Fore.LIGHTBLACK_EX + 'translation_options: ' + str(translation_options) + Style.RESET_ALL)
