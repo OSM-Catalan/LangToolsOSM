@@ -155,6 +155,11 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                         translation_options.append(translations['translations']['wikipedia']['title'])
                         i = i + 1
 
+                    if name_as_option and osm_object.tags['name']:
+                        print(Fore.YELLOW + str(i) + ' = ' + osm_object.tags['name'] + Style.RESET_ALL)
+                        translation_options.append(osm_object.tags['name'])
+                        i = i + 1
+
                     if translations['translations']['extra']:
                         for alias in translations['translations']['extra']:
                             print(str(i) + ' = ' + alias['value'])
@@ -171,11 +176,6 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                             print(str(i) + ' = ' + alias['value'])
                             translation_options.append(alias['value'])
                             i = i + 1
-
-                    if name_as_option and osm_object.tags['name']:
-                        print(Fore.YELLOW + str(i) + ' = ' + osm_object.tags['name'] + Style.RESET_ALL)
-                        translation_options.append(osm_object.tags['name'])
-                        i = i + 1
 
                     if verbose > 2:
                         print(Fore.LIGHTBLACK_EX + 'translation_options: ' + str(translation_options) + Style.RESET_ALL)

@@ -67,7 +67,7 @@ def print_osm_object(osm_object, remark='name', verbose=False):
         wikidata_url = '\t https://wikidata.org/wiki/' + tags['wikidata']
     else:
         wikidata_url = ''
-    print(f'OSM id:{osm_id}({osm_type})\t https://osm.org/{osm_type}/{osm_id}' + wikidata_url + Style.BRIGHT)
+    print(f'OSM id: {osm_id}({osm_type})\t https://osm.org/{osm_type}/{osm_id}' + wikidata_url + Style.BRIGHT)
     for key, value in tags.items():
         if key.startswith(remark):
             print(key + '=' + value, end=', ')
