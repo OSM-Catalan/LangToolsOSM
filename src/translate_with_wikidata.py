@@ -6,7 +6,7 @@ from colorama import Fore, Style
 from tqdm import tqdm
 
 import lib.osm_utils as lt
-import lib.wikidata_translations as wt
+import lib.wikimedia as wikimedia
 from lib import __version__
 
 
@@ -43,7 +43,7 @@ def write_db(db, file, file_format='csv', table_name=None):
 
 
 def db_item_row(db_key, db_item) -> list:
-    translation_list = wt.list_translations(db_item['translations'])
+    translation_list = wikimedia.list_translations(db_item['translations'])
     translations_str = ', '.join(translation_list)
     objects = [x['type'] + '|' + str(x['id']) for x in iter(db_item['objects'])]
     objects = ', '.join(objects)
@@ -86,7 +86,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
         if osm_object.tags['wikidata']:
             wikidata_ids.append(osm_object.tags['wikidata'])
     wikidata_unique_ids = list(dict.fromkeys(wikidata_ids))  # dict keys -> unique in the same order
-    db = wt.get_translations_from_wikidata(ids=wikidata_unique_ids, lang=lang)
+    db = wikimedia.get_translations(ids=wikidata_unique_ids, lang=lang)
     n_translations = 0
     n_objects_with_translations = 0
     for key in db.keys():
@@ -129,7 +129,7 @@ def translate_with_wikidatacommand(area, dry_run, remember_answers, filters, lan
                 raise Exception('Something wrong while fetching the translations from wikidata.')
 
             if verbose > 2:
-                print(Fore.LIGHTBLACK_EX + 'translations: ' + ', '.join(wt.list_translations(translations['translations'])) + Style.RESET_ALL)
+                print(Fore.LIGHTBLACK_EX + 'translations: ' + ', '.join(wikimedia.list_translations(translations['translations'])) + Style.RESET_ALL)
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
             lt.print_osm_object(osm_object, verbose=verbose)

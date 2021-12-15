@@ -2,7 +2,7 @@ import re
 import requests
 
 
-def get_translations_from_wikidata(ids: list, lang: str, batch_size=50) -> dict:
+def get_translations(ids: list, lang: str, batch_size=50) -> dict:
     data = {}
     for ndx in range(0, len(ids), batch_size):
         batch_ids = ids[ndx:min(ndx + batch_size, len(ids))]
