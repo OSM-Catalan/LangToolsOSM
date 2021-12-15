@@ -67,3 +67,49 @@ def list_translations(translations: dict) -> list:
         if translations['extra']:
             translations_list = translations_list + [x['value'] for x in translations['extra']]
     return list(dict.fromkeys(translations_list).keys())
+
+
+def get_wikidata_from_wikipedia(wikipedia: list) -> dict:
+    db = {}
+    pattern_lang = re.compile(r'^([a-z]+):.+')
+    pattern_title = re.compile(r'^[a-z]+:(.+)')
+    for i in wikipedia:
+        try:
+            lang = pattern_lang.search(string=i).group(1)
+            title = pattern_title.search(string=i).group(1)
+        except AttributeError:
+            lang = None
+            title = None
+        if lang:
+            if lang not in db.keys():
+                db.update({lang: {title}})
+            else:
+                db[lang].add(title)
+    out = {}
+    for lang, titles in db.items():
+        wikidict = get_wikidata_from_langwikipedia(sitelinks=list(titles), lang=lang)
+        out.update(dict((lang + ':' + key, value) for (key, value) in wikidict.items()))
+    return out
+
+
+def get_wikidata_from_langwikipedia(sitelinks: list, lang: str, batch_size=50) -> dict:
+    data = {}
+    for ndx in range(0, len(sitelinks), batch_size):
+        batch_sitelinks = sitelinks[ndx:min(ndx + batch_size, len(sitelinks))]
+        query = 'https://' + lang + '.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item&' + \
+                'redirects=1&format=json&utf8=True&titles=' + '|'.join(batch_sitelinks)
+        response = requests.get(query)
+        batch_data = response.json()
+        if 'error' in batch_data.keys():
+            raise Exception('Wrong response from wikidata: ' + batch_data)
+        data.update(batch_data['query']['pages'])
+    # import json
+    # print(json.dumps(data, indent=2))
+
+    out = {}
+    for value in data.values():
+        dict_item = {value['title']: None}
+        if 'pageprops' in value.keys() and value['pageprops']['wikibase_item']:
+            dict_item[value['title']] = value['pageprops']['wikibase_item']
+        out.update(dict_item)
+    return out

@@ -21,6 +21,7 @@ Execute the commands
 * ```fill_empty_name_lang```: looks for features with ```name``` & without ```name:LANG``` tags and copy ```name``` value to ```name:LANG```.
 * ```regex_name_lang```: look for features with ```name``` matching a regular expression and fill ```name:LANG``` with a modified version of ```name``` by a regular expression.
 * ```translate_with_wikidata```: add ```name:LANG``` selecting the label or alias from ```wikidata```.
+* ```fill_wikidata_from_wikipedia```: add ```wikidata``` from ```wikipedia``` tag.
 
 All commands accept the following flags:
 
@@ -30,4 +31,4 @@ All commands accept the following flags:
 
 You will be asked for necessary options if they are not passed to the command call (```--area```, ```--lang```, ```--username```).
 
-You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)``` or by the exact ```name``` value of a feature with area.
+You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)```, overpass filters or by the exact ```name``` value of a feature with area.
