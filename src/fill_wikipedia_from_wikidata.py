@@ -46,7 +46,7 @@ def filter_wikidata_tag(data)->dict:
 
 @click.command()
 @click.option("--debug",default=False,is_flag=True)
-def fill_wikipediacommand(debug):
+def fill_wikipedia_from_wikidatacommand(debug):
     
     overpass_api = overpy.Overpass()
 

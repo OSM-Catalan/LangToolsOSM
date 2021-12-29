@@ -34,7 +34,7 @@ setup(
                             'regex_name_lang=src.regex_name_lang:regex_name_langcommand',
                             'translate_with_wikidata=src.translate_with_wikidata:translate_with_wikidatacommand',
                             'fill_wikidata_from_wikipedia=src.fill_wikidata_from_wikipedia.fill_wikidata_from_wikipediacommand',
-                            'fill_wikipedia=src.fill_wikipedia:fill_wikipediacommand'
+                            'fill_wikipedia_from_wikidata=src.fill_wikipedia:fill_wikipedia_from_wikidatacommand'
                             ]},
     long_description='Fill empty wikidata, wikipedia, name:LANG or name tags with translations from wikidata, regex, '
                      'or copy from name to name:LANG or the reverse. See '
