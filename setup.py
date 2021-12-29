@@ -33,7 +33,9 @@ setup(
                             'fill_empty_name_lang=src.fill_empty_name_lang:fill_empty_name_langcommand',
                             'regex_name_lang=src.regex_name_lang:regex_name_langcommand',
                             'translate_with_wikidata=src.translate_with_wikidata:translate_with_wikidatacommand',
-                            'fill_wikidata_from_wikipedia=src.fill_wikidata_from_wikipedia.fill_wikidata_from_wikipediacommand']},
+                            'fill_wikidata_from_wikipedia=src.fill_wikidata_from_wikipedia.fill_wikidata_from_wikipediacommand',
+                            'fill_wikipedia=src.fill_wikipedia:fill_wikipediacommand'
+                            ]},
     long_description='Fill empty wikidata, wikipedia, name:LANG or name tags with translations from wikidata, regex, '
                      'or copy from name to name:LANG or the reverse. See '
                      'https://wiki.openstreetmap.org/wiki/Multilingual_names '
