@@ -55,7 +55,7 @@ def fill_wikipedia_from_wikidatacommand(debug):
 
     area = input("Bounding box(South,West,North,East) or name value:")
     default_lang = input("Default lang(ca,es,en):")
-    all_langs = bool(input("Add all available languages?(Y/n):") in ["y","Y","","yes"])
+    all_langs = bool(input("Add all available languages?(y/N):") in ["y","Y","yes"])
 
     try:
         api = osmapi.OsmApi(username=user, password=password)
