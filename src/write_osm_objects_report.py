@@ -43,7 +43,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
     else:
         raise ValueError('File format must be "csv" or "mediawiki".')
 
-    header = header + list(extra_tags) + ['translations', 'wikipedia', 'wikidata', 'multilang_names', 'all_tags']
+    header = header + list(extra_tags) + ['translations', f'{lang}.wikipedia_page', 'wikidata_id', 'multilang_names', 'all_tags']
     duplicated_fields = list(set([x for x in header if header.count(x) > 1]))
     extra_tags_ori = extra_tags
     extra_tags = list(extra_tags)
