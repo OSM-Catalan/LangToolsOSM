@@ -58,7 +58,14 @@ def print_osm_object(osm_object, remark='name', verbose=False):
     else:  # osmapi object
         tags = osm_object['tag']
         osm_id = osm_object['id']
-        osm_type = '???'  # TODO: get type for osmapi objects ?osmapi.OsmApi.ParseOsm(element, element)['type']
+        if set({'id', 'lat', 'lon', 'tag', 'version'}).issubset(osm_object.keys()):
+            osm_type = 'node'
+        elif set({'id', 'nd', 'tag', 'version'}).issubset(osm_object.keys()):
+            osm_type = 'way'
+        elif set({'id', 'member', 'tag', 'version'}).issubset(osm_object.keys()):
+            osm_type = 'relation'
+        else:
+            osm_type = '???'
     if verbose:
         print(tags)
         print('------------------------------------------------------')
