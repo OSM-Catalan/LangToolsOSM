@@ -83,9 +83,21 @@ def print_osm_object(osm_object, remark='name', verbose=False):
 
 
 def update_osm_object(osm_object: overpy.Element, tags: dict, api: osmapi.OsmApi) -> dict:
-    if not isinstance(osm_object, overpy.Element):
+    if isinstance(osm_object, overpy.Element):
+        object_tags = osm_object.tags
+    else:
         raise TypeError('osm_object must inherits "overpy.Element"')
-    print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
+    overwrite_keys = list(set.intersection(set(tags.keys()), set(object_tags.keys())))
+    if overwrite_keys:
+        overwrite_keys.sort()
+        overwrite_tags = {key: object_tags[key] for key in overwrite_keys}
+        for key in list(overwrite_tags.keys()):
+            if overwrite_tags[key] == tags[key]:  # omit if the tag has the same value as the osm_object
+                overwrite_tags.pop(key)
+                tags.pop(key)
+        if len(overwrite_tags) > 0:
+            print(Fore.RED + Style.BRIGHT + '- ' + str(overwrite_tags) + Style.RESET_ALL)
+    print(Fore.GREEN + Style.BRIGHT + '+ ' + str(tags) + Style.RESET_ALL)
     allow_update = input('Add tags [Y/n]: ').lower()
     if allow_update in ['y', 'yes', '']:
         if isinstance(osm_object, overpy.Node):
