@@ -48,7 +48,12 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
     print(f'{n_objects} objects to edit.')
     print('######################################################')
     if not set(upload_tags).issubset(data.columns):
-        raise ValueError('tags must include column names present in the input_file.')
+        print('File columns:')
+        print(data.columns)
+        print('Tags to upload:')
+        print(upload_tags)
+        raise ValueError('tags must include column names present in the input_file. Missing columns ' +
+                         str(set(upload_tags).difference(data.columns)))
     if n_objects > 200:  # TODO: count tags with value
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
                          'Reduce the number of objects in the input file or stop when you want by pressing Ctrl+c.' + Style.RESET_ALL)
@@ -90,6 +95,7 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
             lt.print_osm_object(osm_object, verbose=verbose)
 
             overwrite_keys = list(set.intersection(set(tags.keys()), set(osm_object_data['tag'].keys())))
+            overwrite_tags = dict()
             if overwrite_keys:
                 overwrite_keys.sort()
                 overwrite_tags = {key: osm_object_data['tag'][key] for key in overwrite_keys}
