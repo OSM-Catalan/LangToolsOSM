@@ -64,6 +64,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             if translations['translations']:
                 if translations['translations']['wikipedia']:
                     wikipedia_page = translations['translations']['wikipedia']['title']
+                translations['translations']['extra'] = None
                 translations = wt.list_translations(translations['translations'])
                 translations = list(dict.fromkeys(translations))  # unique keeping order
                 translations = ', '.join(translations)
