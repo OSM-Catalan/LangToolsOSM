@@ -69,6 +69,12 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
                 translations = ', '.join(translations)
             else:
                 translations = ''
+        name = ''
+        if 'name' in osm_object.tags.keys():
+            name = osm_object.tags['name']
+        name_lang = ''
+        if 'name:' + lang in osm_object.tags.keys():
+            name_lang = osm_object.tags['name:' + lang]
         names_tags = []
         for key, value in osm_object.tags.items():
             if key.startswith('name:'):
@@ -81,23 +87,21 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
                 if key in osm_object.tags.keys():
                     tag_value = osm_object.tags[key]
                 extra_tags_values.update({key: tag_value})
-        name_lang = ''
-        if 'name:' + lang in osm_object.tags.keys():
-            name_lang = osm_object.tags['name:' + lang]
+
         if output_format == 'csv':
             if wikimedia_urls:
                 if wikidata_id != '':
                     wikidata_id = 'https://www.wikidata.org/wiki/' + wikidata_id
                 if wikipedia_page != '':
                     wikipedia_page = f'https://{lang}.wikipedia.com/wiki/{wikipedia_page}'
-            object_data = [osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] +\
+            object_data = [osm_object._type_value, osm_object.id, name, name_lang] +\
                           list(extra_tags_values.values()) +\
                           [translations, wikipedia_page, wikidata_id, names_tags, str(osm_object.tags)]
         elif output_format == 'mediawiki':
             if wikidata_id != '':
-                wikidata_id = f'[https://www.wikidata.org/wiki/{wikidata_id} | {wikidata_id}]'
+                wikidata_id = f'[https://www.wikidata.org/wiki/{wikidata_id} {wikidata_id}]'
             if wikipedia_page != '':
-                wikipedia_page = f'[https://{lang}.wikipedia.com/wiki/{wikipedia_page} | {wikipedia_page}]'
+                wikipedia_page = f'[https://{lang}.wikipedia.com/wiki/{wikipedia_page} {wikipedia_page}]'
             osm_object_str = '{{' + osm_object._type_value + '|' + str(osm_object.id) + '}}'
             object_data = [osm_object_str, osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] +\
                           list(extra_tags_values.values()) +\
