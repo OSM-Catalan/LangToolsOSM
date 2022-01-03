@@ -24,6 +24,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         east = area.split(',')[3]
 
         query = f"""
+        [timeout:1000];
         (
             {filters}({south},{west},{north},{east});
         );
@@ -31,6 +32,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         """
     elif re.search(r'^\[.+\]$', area):
         query = f"""
+        [timeout:1000];
          area{area}->.searchArea;
          (
              {filters}(area.searchArea);
@@ -39,6 +41,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
          """
     else:
         query = f"""
+        [timeout:1000];
         area[name="{area}"]->.searchArea;
         (
             {filters}(area.searchArea);
