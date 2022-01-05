@@ -64,6 +64,8 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
     n_edits = 0
     try:
         for row in tqdm(data.iterrows()):
+            if not dry_run:
+                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
             tags = row[1][upload_tags]
             tags = dict(tags.dropna())
 
@@ -132,7 +134,6 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
                     committed = api.RelationUpdate(osm_object_data)
                 if committed:
                     n_edits = n_edits + 1
-                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
 
     finally:
         print('######################################################')

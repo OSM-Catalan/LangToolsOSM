@@ -78,7 +78,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             name_lang = osm_object.tags['name:' + lang]
         names_tags = []
         for key, value in osm_object.tags.items():
-            if key.startswith('name:'):
+            if key.startswith('name:') or key in ['int_name', 'loc_name', 'short_name', 'official_name']:
                 names_tags.append(key + '=' + value)
         names_tags = ', '.join(names_tags)
         if extra_tags:
