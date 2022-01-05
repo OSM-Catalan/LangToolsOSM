@@ -28,7 +28,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         (
             {filters}({south},{west},{north},{east});
         );
-        out tags;
+        out tags qt;
         """
     elif re.search(r'^\[.+\]$', area):
         query = f"""
@@ -37,7 +37,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
          (
              {filters}(area.searchArea);
          );
-         out tags;
+         out tags qt;
          """
     else:
         query = f"""
@@ -46,7 +46,7 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         (
             {filters}(area.searchArea);
         );
-        out tags;
+        out tags qt;
         """
 
     result = overpass_api.query(query=query)
