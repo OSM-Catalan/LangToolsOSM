@@ -2,6 +2,7 @@ import getpass
 import osmapi
 import overpy
 import re
+import time
 from colorama import Fore, Style
 
 
@@ -13,7 +14,7 @@ def login_osm(username=None) -> osmapi.OsmApi:
     return api
 
 
-def get_overpass_result(area: str, filters: str) -> overpy.Result:
+def get_overpass_result(area: str, filters: str, retry=5, sleep_retry=5) -> overpy.Result:
     overpass_api = overpy.Overpass()
     # filters = "nwr['name']['wikidata'][~"name:[a-z]+"~"."]"
     if re.search('([0-9.-]+,){3}[0-9.-]+', area):
@@ -49,7 +50,20 @@ def get_overpass_result(area: str, filters: str) -> overpy.Result:
         out tags qt;
         """
 
-    result = overpass_api.query(query=query)
+    try:
+        result = overpass_api.query(query=query)
+    except overpy.exception.OverpassTooManyRequests:
+        result = None
+        for t in range(1, retry + 1):
+            print('overpass too many requests. Retry ' + t + ' from ' + retry)
+            time.sleep(sleep_retry)
+            if result in None:
+                overpass_api.query(query=query)
+            else:
+                return result
+        if result is None:
+            print('No overpass results after ' + retry + 'retries.')
+            raise overpy.exception.OverpassTooManyRequests
     return result
 
 
