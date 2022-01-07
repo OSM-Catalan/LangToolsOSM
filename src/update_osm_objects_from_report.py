@@ -10,6 +10,7 @@ from lib import __version__
 
 @click.command()
 @click.argument('upload-tags', nargs=-1)
+@click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
 @click.option('--confirmed-edits', default=False, is_flag=True, help='Do not ask for confirmation for every object edition. Review carfully the input-file before using this option.')
 @click.option('--confirm-overwrites', default=False, is_flag=True, help='Ask for confirmation for updates that overwrite any tag value.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
@@ -18,7 +19,7 @@ from lib import __version__
 @click.option('--source', type=str, help='Source tag value for the changeset. Ignored in --dry-run mode.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, source, upload_tags, username, verbose):
+def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, source, upload_tags, username, verbose):
     """Upload changed tags from an edited report file to OSM. UPLOAD_TAGS must match column names in the input file.
     You can generate a report file with write_osm_objects_report."""
     upload_tags = list(upload_tags)
@@ -54,14 +55,15 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
         print(upload_tags)
         raise ValueError('tags must include column names present in the input_file. Missing columns ' +
                          str(set(upload_tags).difference(data.columns)))
-    if n_objects > 200:  # TODO: count tags with value
+    if n_objects > 200 and batch is not None and batch > 200:  # TODO: count tags with value
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
-                         'Reduce the number of objects in the input file or stop when you want by pressing Ctrl+c.' + Style.RESET_ALL)
+                         'Reduce the number of objects in the input file, add batch option < 200 or stop when you want by pressing Ctrl+c.' + Style.RESET_ALL)
     start = input('Start editing [Y/n]: ').lower()
     if start not in ['y', 'yes', '']:
         exit()
 
     n_edits = 0
+    total_edits = 0
     try:
         for row in tqdm(data.iterrows()):
             if not dry_run:
@@ -134,11 +136,19 @@ def update_osm_objects_from_reportcommand(confirmed_edits, confirm_overwrites, d
                     committed = api.RelationUpdate(osm_object_data)
                 if committed:
                     n_edits = n_edits + 1
+                if n_edits > batch:
+                    print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
+                    total_edits = total_edits + n_edits
+                    api.ChangesetClose()
+                    changeset = None
+                    n_edits = 0
 
     finally:
         print('######################################################')
         if changeset and not dry_run:
-            print(f'DONE! {n_edits} objects modified from {n_objects} objects ({round(n_edits / n_objects * 100)}%)'
+            if batch:
+                total_edits = n_edits
+            print(f'DONE! {total_edits} objects modified from {n_objects} objects ({round(total_edits / n_objects * 100)}%)'
                   f' https://www.osm.org/changeset/{changeset}')
             api.ChangesetClose()
         elif dry_run:
