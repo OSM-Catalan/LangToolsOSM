@@ -8,7 +8,7 @@ This tool requires the python3 interpreter. You can find it here:
 https://www.python.org/downloads/
 
 # Installation
-Download the code and run ```pip3 install``` inside the folder
+Download the code and run ```pip3 install .``` inside the folder.
 
 In Windows to run this command to install LangToolsOSM you have to open the Windows Console
 ```
@@ -16,13 +16,9 @@ win + R "cmd"
 ```
  and execute 
 ```
-cd <folder name>
+cd <path>
 ```
  to the target folder, once in the target folder run the command
-```
-pip3 install .
-```
-
 # Usage
 
 Execute the commands
