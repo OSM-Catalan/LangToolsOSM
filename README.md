@@ -19,6 +19,9 @@ win + R "cmd"
 cd <path>
 ```
  to the target folder, once in the target folder run the command
+```
+pip3 install .
+```
 # Usage
 
 Execute the commands
