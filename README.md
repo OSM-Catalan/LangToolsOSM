@@ -22,6 +22,9 @@ cd <path>
 ```
 pip3 install .
 ```
+
+
+
 # Usage
 
 Execute the commands
@@ -41,3 +44,10 @@ All commands accept the following flags:
 You will be asked for necessary options if they are not passed to the command call (```--area```, ```--lang```, ```--username```).
 
 You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)```, overpass filters or by the exact ```name``` value of a feature with area.
+
+# Example
+In the following example you will be able to add all the ```name:ca``` that are missing in the municipality of Alcalalí with the name of the ```name```.
+
+```
+fill_empty_name_lang --lang ca -v --area "['name'='Alcalalí']" --dry-run
+```
