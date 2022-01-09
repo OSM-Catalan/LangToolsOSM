@@ -1,14 +1,14 @@
 import click
 import requests
-import osmapi
-import overpy
-import getpass
-import re
 from tqdm import tqdm
 from colorama import Fore, Style
 
+import lib.osm_utils as lt
+from lib import __version__
 
-def get_links(ident)->dict:
+
+# TODO: move to lib/wikimedia.py
+def get_links(ident) -> dict:
     response = requests.get(f"https://www.wikidata.org/wiki/Special:EntityData/{ident}.json")
     data = response.json()
     ret = {}
@@ -23,7 +23,7 @@ def get_links(ident)->dict:
         "langs": ret }
     
 
-def filter_wikidata_tag(data)->dict:
+def filter_wikidata_tag(data) -> dict:
     ret = {
         "nodes": [],
         "ways": [],
@@ -44,155 +44,80 @@ def filter_wikidata_tag(data)->dict:
 
     return ret
 
+
 @click.command()
-@click.option("--debug",default=False,is_flag=True)
-def fill_wikipedia_from_wikidatacommand(debug):
-    
-    overpass_api = overpy.Overpass()
-
-    user = input("User:")
-    password = getpass.getpass("Password:")
-
-    area = input("Bounding box(South,West,North,East) or name value:")
-    default_lang = input("Default lang(ca,es,en):")
-    all_langs = bool(input("Add all available languages?(y/N):") in ["y","Y","yes"])
-
+@click.option('--area', prompt='Bounding box (South,West,North,East), overpass filters or the exact name value of an area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou").')
+@click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
+@click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
+@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr[!wikipedia][wikidata]".""")
+@click.option('--lang', prompt='Language of the wikipedia page to add (e.g. ca, en, ...)', type=str, help='A language code matching the prefix of a wikipedia site. (eg. "ca" for https://ca.wikipedia.org)')
+@click.option('--all-langs', default=False, is_flag=True, help='Add all available wikipedia pages for all languages. WARNING: this is not recommended. See https://wiki.openstreetmap.org/wiki/Key:wikipedia#Secondary_languages')
+@click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
+@click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
+def fill_wikipedia_from_wikidatacommand(area, batch, dry_run, filters, lang, all_langs,  username, verbose):
+    """Add «wikipedia» from «wikidata» tag."""
+    if not dry_run:
+        api = lt.login_osm(username=username)
+    if not filters:
+        filters = 'nwr[!wikipedia][wikidata]'
+    print('After the first object edition a changeset with the following tags will be created:')
+    changeset_tags = {u'comment': f'Fill empty wikipedia tags resolving wikidata id in {area} for {filters}',
+                      u'source': u'wikipedia', u'created_by': f'LangToolsOSM {__version__}'}
+    print(changeset_tags)
+    result = lt.get_overpass_result(area=area, filters=filters)
+    n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
+    print('######################################################')
+    print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
+          f' ways and {str(len(result.relations))} relations).')
+    print('######################################################')
+    if n_objects > 200 and batch is not None and batch > 200:
+        print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
+              'Reduce the area, add batch option < 200 or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
+    # TODO print and prefetch wikimedia info
+    changeset = None
+    n_edits = 0
+    total_edits = 0
     try:
-        api = osmapi.OsmApi(username=user, password=password)
-
-        if re.search('([0-9.-]+,){3}[0-9.-]+', area) is None:
-            result = overpass_api.query(f"""
-            area[name="{area}"]->.searchArea;
-            (
-                nwr["wikidata"][!"wikipedia"](area.searchArea);
-            );
-            out tags;
-            """)
-        else:
-            area = area.replace("[","").replace("]","").replace("(","").replace(")","")
-            south = area.split(",")[0]
-            west = area.split(",")[1]
-            north = area.split(",")[2]
-            east = area.split(",")[3]
-
-            result = overpass_api.query(f"""
-            (
-                nwr["wikidata"][!"wikipedia"]({south},{west},{north},{east});
-            );
-            out tags;
-            """)
-        wikidata_results = filter_wikidata_tag(result)
-        changeset = None
-        for rn in tqdm(wikidata_results["nodes"]):
-            if "wikidata" in rn.tags:
-                links = get_links(rn.tags["wikidata"])
+        for osm_object in tqdm(result.nodes + result.ways + result.relations):
+            lt.print_osm_object(osm_object, verbose=verbose)
+            if 'wikidata' in osm_object.tags:
+                links = get_links(osm_object.tags['wikidata'])
                 if links:
                     tags = {}
-                    if links["id"] != rn.tags["wikidata"]:
-                        print(f"Wikidata points to a redirected item. Updating wikidata tag {rn.tags['wikidata']} -> {links['id']}")
+                    if links['id'] != osm_object.tags['wikidata']:
+                        print(f"Wikidata points to a redirected item. Updating wikidata tag {osm_object.tags['wikidata']} -> {links['id']}")
                         tags['wikidata'] = links['id']
 
-                    if debug:
-                        print(rn.tags)
-                    print(f"OSM id:{rn.id}(node) name:{rn.tags.get('name','')} Wikidata id:{rn.tags['wikidata']}")
-                    for language, value in links["langs"].items():
-                        if language == default_lang:
-                            tags["wikipedia"] = f"{language}:{value}"
+                    for language, value in links['langs'].items():
+                        if language == lang:
+                            tags['wikipedia'] = f'{language}:{value}'
                         elif all_langs:
-                            tags[f"wikipedia:{language}"] = value
-                    print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
+                            tags[f'wikipedia:{language}'] = value
                     if tags:
-                        node = api.NodeGet(rn.id)
-                        node_data = {
-                        'id': node["id"],
-                            'lat': node["lat"],
-                            'lon': node["lon"],
-                            'tag': node["tag"],
-                            'version': node["version"],
-                        }
-                        node_data["tag"].update(tags)
-                        if changeset is None:
-                            api.ChangesetCreate({u"comment": u"Fill wikipedia tags", u"created_by": u"fill_wikipedia_osm", u"source": u"wikidata tag"})
-                            changeset = True
+                        if not dry_run:
+                            if changeset is None:
+                                changeset = api.ChangesetCreate(changeset_tags)
+                            committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
+                            if committed:
+                                n_edits = n_edits + 1
+                            if n_edits > batch:
+                                print(
+                                    f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
+                                total_edits = total_edits + n_edits
+                                api.ChangesetClose()
+                                changeset = None
+                                n_edits = 0
 
-                        allow_node = input("It's correct[Y/n]:")
-                        if allow_node in ["y","","Y","yes"]:
-                            api.NodeUpdate(node_data)
-                        print("")
-
-        
-        for rw in tqdm(wikidata_results["ways"]):
-            if "wikidata" in rw.tags:
-                links = get_links(rw.tags["wikidata"])
-                if links:
-                    tags = {}
-                    if links["id"] != rw.tags["wikidata"]:
-                        print(f"Wikidata points to a redirected item. Updating wikidata tag {rw.tags['wikidata']} -> {links['id']}")
-                        tags['wikidata'] = links['id']
-
-                    if debug:
-                        print(rw.tags)
-                    print(f"OSM id:{rw.id}(way) name:{rw.tags.get('name','')} Wikidata id:{rw.tags['wikidata']}")
-                    for language, value in links["langs"].items():
-                        if language == default_lang:
-                            tags["wikipedia"] = f"{language}:{value}"
-                        elif all_langs:
-                            tags[f"wikipedia:{language}"] = value
-                    print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
-                    if tags:
-                        way = api.WayGet(rw.id)
-                        way_data = {
-                            'id': way["id"],
-                            'nd': way["nd"],
-                            'tag': way["tag"],
-                            'version': way["version"],
-                        }
-                        way_data["tag"].update(tags)
-                        if changeset is None:
-                            api.ChangesetCreate({u"comment": u"Fill wikipedia tags", u"created_by": u"fill_wikipedia_osm", u"source": u"wikidata tag"})
-                            changeset = True
-                        allow_way = input("It's correct[Y/n]:")
-                        if allow_way in ["","y","Y","yes"]:
-                            api.WayUpdate(way_data)
-                        print("")
-
-
-        for rr in tqdm(wikidata_results["relations"]):
-            if "wikidata" in rr.tags:
-                links = get_links(rr.tags["wikidata"])
-                if links:
-                    tags = {}
-                    if links["id"] != rr.tags["wikidata"]:
-                        print(f"Wikidata points to a redirected item. Updating wikidata tag {rr.tags['wikidata']} -> {links['id']}")
-                        tags['wikidata'] = links['id']
-
-                    if debug:
-                        print(rr.tags)
-                    print(f"OSM id:{rr.id}(relation) name:{rr.tags.get('name','')} Wikidata id:{rr.tags['wikidata']}")
-                    for language, value in links["langs"].items():
-                        if language == default_lang:
-                            tags["wikipedia"] = f"{language}:{value}"
-                        elif all_langs:
-                            tags[f"wikipedia:{language}"] = value
-                    print(Fore.GREEN + "+ " + str(tags) + Style.RESET_ALL)
-                    if tags:
-                        rel = api.RelationGet(rr.id)
-                        rel_data = {
-                            'id': rel["id"],
-                            'member': rel["member"],
-                            'tag': rel["tag"],
-                            'version': rel["version"],
-                        }
-                        rel_data["tag"].update(tags)
-                        if changeset is None:
-                            api.ChangesetCreate({u"comment": u"Fill wikipedia tags", u"created_by": u"fill_wikipedia_osm", u"source": u"wikidata tag"})
-                            changeset = True
-                        allow_relation = input("It's correct[Y/n]:")
-                        if allow_relation in ["","y","Y","yes"]:
-                            api.RelationUpdate(rel_data)
-                        print("")
-
-
-    finally:        
-        if changeset:
+    finally:
+        print('######################################################')
+        if changeset and not dry_run:
+            if not batch:
+                total_edits = n_edits
+            print(f'DONE! {total_edits} objects modified' # from {n_objects_with_wikidata}'
+                  # f' objects with available translations ({round(total_edits / n_objects_with_wikidata * 100)}%)'
+                  f' https://www.osm.org/changeset/{changeset}')
             api.ChangesetClose()
+        elif dry_run:
+            print('DONE! No change send to OSM (--dry-run).')
+        else:
+            print('DONE! No change send to OSM.')
