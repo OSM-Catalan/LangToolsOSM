@@ -214,7 +214,7 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
                     object_db = db[translations['id']]['objects'].pop()
                     object_db['modified'] = True
                     db[translations['id']]['objects'].append(object_db)
-                if n_edits > batch:
+                if batch and n_edits > batch:
                     print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
                     total_edits = total_edits + n_edits
                     api.ChangesetClose()

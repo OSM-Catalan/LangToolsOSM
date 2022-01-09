@@ -136,7 +136,7 @@ def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwr
                     committed = api.RelationUpdate(osm_object_data)
                 if committed:
                     n_edits = n_edits + 1
-                if n_edits > batch:
+                if batch and n_edits > batch:
                     print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
                     total_edits = total_edits + n_edits
                     api.ChangesetClose()
