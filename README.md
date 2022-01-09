@@ -14,11 +14,11 @@ In Windows to run this command to install LangToolsOSM you have to open the Wind
 ```
 win + R "cmd"
 ```
- and execute 
+ and execute ```cd``` to navigate to the target folder
 ```
 cd <path>
 ```
- to the target folder, once in the target folder run the command
+once in the folder run the command
 ```
 pip3 install .
 ```
