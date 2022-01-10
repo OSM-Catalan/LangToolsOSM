@@ -46,7 +46,7 @@ You will be asked for necessary options if they are not passed to the command ca
 You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)```, overpass filters or by the exact ```name``` value of a feature with area.
 
 # Example
-In the following example you will be able to add all the ```name:ca``` that are missing in the municipality of Alcalalí with the name of the ```name```.
+In the following example you will be able to review and add all the ```name:ca``` that are missing in the municipality of Alcalalí with the content of the ```name``` tag which is in catalan.
 
 ```
 fill_empty_name_lang --lang ca -v --area "['name'='Alcalalí']" --dry-run
