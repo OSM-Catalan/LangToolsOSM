@@ -22,6 +22,10 @@ from lib import __version__
 def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, source, upload_tags, username, verbose):
     """Upload changed tags from an edited report file to OSM. UPLOAD_TAGS must match column names in the input file.
     You can generate a report file with write_osm_objects_report."""
+    if upload_tags is None:
+        print('DONE! No change send to OSM because no UPLOAD_TAGS selected.')
+        print('See "update_osm_objects_from_report --help" for details')
+        exit()
     upload_tags = list(upload_tags)
     if dry_run:
         api = osmapi.OsmApi()

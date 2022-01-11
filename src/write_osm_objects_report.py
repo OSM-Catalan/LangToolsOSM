@@ -43,11 +43,13 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
     else:
         raise ValueError('File format must be "csv" or "mediawiki".')
 
-    header = header + list(extra_tags) + ['translations', f'{lang}.wikipedia_page', 'wikidata_id', 'multilang_names', 'all_tags']
+    if extra_tags is not None:
+        header = header + list(extra_tags)
+    header = header + ['translations', f'{lang}.wikipedia_page', 'wikidata_id', 'multilang_names', 'all_tags']
     duplicated_fields = list(set([x for x in header if header.count(x) > 1]))
     extra_tags_ori = extra_tags
-    extra_tags = list(extra_tags)
-    for rm_tag in duplicated_fields:
+    for rm_tag in duplicated_fields and extra_tags is not None:
+        extra_tags = list(extra_tags)
         extra_tags.remove(rm_tag)
 
     header = list(dict.fromkeys(header))
@@ -81,8 +83,8 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             if key.startswith('name:') or key in ['int_name', 'loc_name', 'short_name', 'official_name']:
                 names_tags.append(key + '=' + value)
         names_tags = ', '.join(names_tags)
+        extra_tags_values = dict()
         if extra_tags:
-            extra_tags_values = dict()
             for key in extra_tags:
                 tag_value = ''
                 if key in osm_object.tags.keys():
@@ -95,8 +97,8 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
                     wikidata_id = 'https://www.wikidata.org/wiki/' + wikidata_id
                 if wikipedia_page != '':
                     wikipedia_page = f'https://{lang}.wikipedia.com/wiki/{wikipedia_page}'
-            object_data = [osm_object._type_value, osm_object.id, name, name_lang] +\
-                          list(extra_tags_values.values()) +\
+            object_data = [osm_object._type_value, osm_object.id, name, name_lang] + \
+                          list(extra_tags_values.values()) + \
                           [translations, wikipedia_page, wikidata_id, names_tags, str(osm_object.tags)]
         elif output_format == 'mediawiki':
             if wikidata_id != '':
@@ -104,8 +106,8 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             if wikipedia_page != '':
                 wikipedia_page = f'[https://{lang}.wikipedia.com/wiki/{wikipedia_page} {wikipedia_page}]'
             osm_object_str = '{{' + osm_object._type_value + '|' + str(osm_object.id) + '}}'
-            object_data = [osm_object_str, osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] +\
-                          list(extra_tags_values.values()) +\
+            object_data = [osm_object_str, osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] + \
+                          list(extra_tags_values.values()) + \
                           [translations, wikipedia_page, wikidata_id, names_tags, str(osm_object.tags)]
         else:
             raise ValueError('File format must be "csv" or "mediawiki".')
