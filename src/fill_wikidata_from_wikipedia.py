@@ -22,7 +22,7 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
     if not filters:
         filters = 'nwr[wikipedia][!wikidata]'
     print('After the first object edition a changeset with the following tags will be created:')
-    changeset_tags = {u'comment': f'Fill empty wikidata tags resolving wikidata id in {area} for {filters}',
+    changeset_tags = {u'comment': f'Fill empty wikidata tags from wikipedia tag in {area} for {filters}',
                       u'source': u'wikipedia', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
     result = lt.get_overpass_result(area=area, filters=filters)
@@ -31,9 +31,6 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
     print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
           f' ways and {str(len(result.relations))} relations).')
     print('######################################################')
-    if n_objects > 200 and batch is not None and batch > 200:
-        print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
-                         'Reduce the area, add batch option < 200 or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
 
     wikipedia = []
     pattern = re.compile(r'^([a-z])+:(.+)')
@@ -78,10 +75,9 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
             lt.print_osm_object(osm_object, verbose=verbose)
             tags = {'wikidata': wikidata}
 
-            if changeset is None and not dry_run:
-                changeset = api.ChangesetCreate(changeset_tags)
-
             if not dry_run:
+                if changeset is None:
+                    changeset = api.ChangesetCreate(changeset_tags)
                 committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                 if committed:
                     n_edits = n_edits + 1

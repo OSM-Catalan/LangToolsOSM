@@ -146,7 +146,7 @@ def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwr
     finally:
         print('######################################################')
         if changeset and not dry_run:
-            if batch:
+            if not batch:
                 total_edits = n_edits
             print(f'DONE! {total_edits} objects modified from {n_objects} objects ({round(total_edits / n_objects * 100)}%)'
                   f' https://www.osm.org/changeset/{changeset}')
