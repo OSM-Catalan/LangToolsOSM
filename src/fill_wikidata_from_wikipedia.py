@@ -36,15 +36,16 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
     pattern = re.compile(r'^([a-z])+:(.+)')
     for osm_object in result.nodes + result.ways + result.relations:
         if 'wikipedia' in osm_object.tags.keys():
-            wikipedia.add(osm_object.tags['wikipedia'])
+            wikipedia.append(osm_object.tags['wikipedia'])
     wikipedia_unique = list(set(wikipedia))
     db = wikimedia.get_wikidata_from_wikipedia(wikipedia=wikipedia_unique)
-    n_matches = len(db)
+    n_matches = 0
     n_objects_with_wikidata = 0
     for key in db.keys():
         db[key].update({'objects': [], 'answer': {'value': None, 'committed': False}})
         if db[key]['translations']:
             n_objects_with_wikidata = n_objects_with_wikidata + wikipedia.count(key)
+            n_matches = n_matches + 1
     if n_objects_with_wikidata > 0:
         percent_objects_with_wikidata = round(n_objects_with_wikidata / n_objects * 100)
     else:
@@ -68,25 +69,28 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
     total_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if osm_object.tags['wikipedia'] in db.keys():
-                wikidata = db[osm_object.tags['wikipedia']]
             if not dry_run:
                 lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
             lt.print_osm_object(osm_object, verbose=verbose)
-            tags = {'wikidata': wikidata}
-
-            if not dry_run:
-                if changeset is None:
-                    changeset = api.ChangesetCreate(changeset_tags)
-                committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
-                if committed:
-                    n_edits = n_edits + 1
-                if batch and n_edits > batch:
-                    print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
-                    total_edits = total_edits + n_edits
-                    api.ChangesetClose()
-                    changeset = None
-                    n_edits = 0
+            if 'wikipedia' in osm_object.tags.keys and osm_object.tags['wikipedia'] in db.keys():
+                wikidata = db[osm_object.tags['wikipedia']]
+                tags = {'wikidata': wikidata}
+                if not dry_run:
+                    if changeset is None:
+                        changeset = api.ChangesetCreate(changeset_tags)
+                    committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
+                    if committed:
+                        n_edits = n_edits + 1
+                    if batch and n_edits > batch:
+                        print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
+                        total_edits = total_edits + n_edits
+                        api.ChangesetClose()
+                        changeset = None
+                        n_edits = 0
+                else:
+                    print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
+            else:
+                print(Fore.BLUE + 'SKIP: object without "wikipedia" tag.' + Style.RESET_ALL)
 
     finally:
         print('######################################################')

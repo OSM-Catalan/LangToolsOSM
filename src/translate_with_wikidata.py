@@ -117,9 +117,13 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
     total_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if osm_object.tags['wikidata'] in db.keys():
+            if not dry_run:
+                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+            lt.print_osm_object(osm_object, verbose=verbose)
+            if 'wikidata' in osm_object.tags.keys() and osm_object.tags['wikidata'] in db.keys():
                 translations = {'id': osm_object.tags['wikidata'],
                                 'translations': db[osm_object.tags['wikidata']]['translations']}
+                tags = {}
                 if output:
                     db[translations['id']]['objects'].append({'name': osm_object.tags['name'],
                                                               'type': osm_object._type_value,
@@ -132,10 +136,6 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
 
             if verbose > 2:
                 print(Fore.LIGHTBLACK_EX + 'translations: ' + ', '.join(wikimedia.list_translations(translations['translations'])) + Style.RESET_ALL)
-            if not dry_run:
-                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-            lt.print_osm_object(osm_object, verbose=verbose)
-            tags = {}
 
             if remember_answers and db[translations['id']]['answer']['committed']:
                 print(Fore.BLUE + 'Remembering your answer...' + Style.RESET_ALL)
@@ -203,10 +203,9 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
                     tags['name:' + lang] = translation_options[select_translation]
                 db[translations['id']]['answer']['value'] = tags['name:' + lang]
 
-            if changeset is None and not dry_run:
-                changeset = api.ChangesetCreate(changeset_tags)
-
             if not dry_run:
+                if changeset is None:
+                    changeset = api.ChangesetCreate(changeset_tags)
                 committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                 if committed:
                     n_edits = n_edits + 1
@@ -220,6 +219,8 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
                     api.ChangesetClose()
                     changeset = None
                     n_edits = 0
+            else:
+                print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
 
     finally:
         print('######################################################')

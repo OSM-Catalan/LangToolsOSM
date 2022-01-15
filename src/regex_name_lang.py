@@ -35,34 +35,38 @@ def regex_name_langcommand(find, replace, area, batch, dry_run, filters, lang, u
     if n_objects > 200 and batch is not None and batch > 200:
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
               'Reduce the area, add batch option < 200 or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
-    regex = re.compile(find, )
+    start = input('Start editing [Y/n]: ').lower()
+    if start not in ['y', 'yes', '']:
+        exit()
+
+    regex = re.compile(find)
     changeset = None
     n_edits = 0
     total_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
-            if 'name' in osm_object.tags:
+            if not dry_run:
+                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+            lt.print_osm_object(osm_object, verbose=verbose)
+            if 'name' in osm_object.tags.keys():
                 tags = {'name:' + lang: regex.sub(replace, osm_object.tags['name'])}
-
-                if tags:
-                    if not dry_run:
-                        lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
-                    lt.print_osm_object(osm_object, verbose=verbose)
-                    if changeset is None and not dry_run:
+                if not dry_run:
+                    if changeset is None:
                         changeset = api.ChangesetCreate(changeset_tags)
+                    committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
+                    if committed:
+                        n_edits = n_edits + 1
+                    if batch and n_edits > batch:
+                        print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
+                        total_edits = total_edits + n_edits
+                        api.ChangesetClose()
+                        changeset = None
+                        n_edits = 0
+                else:
+                    print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
+            else:
+                print(Fore.BLUE + 'SKIP: object without "name" tag.' + Style.RESET_ALL)
 
-                    if not dry_run:
-                        committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
-                        if committed:
-                            n_edits = n_edits + 1
-                        if batch and n_edits > batch:
-                            print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
-                            total_edits = total_edits + n_edits
-                            api.ChangesetClose()
-                            changeset = None
-                            n_edits = 0
-                    else:
-                        print(Fore.GREEN + Style.BRIGHT + '\n+ ' + str(tags) + Style.RESET_ALL)
 
     finally:
         if changeset and not dry_run:

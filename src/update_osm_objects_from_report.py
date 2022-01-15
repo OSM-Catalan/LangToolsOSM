@@ -37,7 +37,6 @@ def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwr
     if source:
         changeset_tags.update({'source': source})
     print(changeset_tags)
-    changeset = None
 
     if input_format == 'csv':
         data = pd.read_table(input_file, skiprows=1)
@@ -66,6 +65,7 @@ def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwr
     if start not in ['y', 'yes', '']:
         exit()
 
+    changeset = None
     n_edits = 0
     total_edits = 0
     try:
