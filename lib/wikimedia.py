@@ -113,3 +113,28 @@ def get_wikidata_from_langwikipedia(sitelinks: list, lang: str, batch_size=50) -
             dict_item[value['title']] = value['pageprops']['wikibase_item']
         out.update(dict_item)
     return out
+
+
+def get_wikipedia_from_wikidata(wikidata: list, batch_size=50) -> dict:
+    data = {}
+    for ndx in range(0, len(wikidata), batch_size):
+        batch_ids = wikidata[ndx:min(ndx + batch_size, len(wikidata))]
+        query = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + '|'.join(batch_ids) +\
+                '&props=sitelinks&format=json'
+        response = requests.get(query)
+        batch_data = response.json()
+        if 'error' in batch_data.keys():
+            raise Exception('Wrong response from wikidata: ' + batch_data)
+        data.update(batch_data['entities'])
+    # import json
+    # print(json.dumps(data, indent=2))
+    out = {}
+    for wikidata_id, value in data.items():
+        if 'sitelinks' in value.keys():
+            sitelinks = {}
+            for sitelink in value["sitelinks"].keys():
+                if sitelink.endswith("wiki") and sitelink != "commonswiki":
+                    sitelinks.update({sitelink.replace("wiki", ""): value["sitelinks"][sitelink]["title"]})
+            if len(sitelinks) > 0:
+                out.update({wikidata_id: {'id': value['id'], 'sitelinks': sitelinks}})
+    return out
