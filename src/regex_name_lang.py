@@ -56,7 +56,7 @@ def regex_name_langcommand(find, replace, area, batch, dry_run, filters, lang, u
                     committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                     if committed:
                         n_edits = n_edits + 1
-                    if batch and n_edits > batch:
+                    if batch and n_edits >= batch:
                         print(f'{n_edits} edits DONE! https://www.osm.org/changeset/{changeset}. Opening a new changeset.')
                         total_edits = total_edits + n_edits
                         api.ChangesetClose()
@@ -70,8 +70,7 @@ def regex_name_langcommand(find, replace, area, batch, dry_run, filters, lang, u
 
     finally:
         if changeset and not dry_run:
-            if not batch:
-                total_edits = n_edits
+            total_edits = total_edits + n_edits
             print(f'DONE! {total_edits} objects modified https://www.osm.org/changeset/{changeset}')
             api.ChangesetClose()
         elif dry_run:
