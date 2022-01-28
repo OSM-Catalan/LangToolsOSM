@@ -52,21 +52,21 @@ def get_overpass_result(area: str, filters: str, retry=5, sleep_retry=10) -> ove
 
     try:
         result = overpass_api.query(query=query)
-    except overpy.exception.OverpassTooManyRequests:
+    except (overpy.exception.OverpassTooManyRequests, overpy.exception.OverpassGatewayTimeout) as error:
         result = None
         for t in range(1, retry + 1):
-            print('overpass too many requests. Retry ' + str(t) + ' of ' + str(retry))
+            print('Overpass response: ', str(error).removeprefix("<class 'overpy.exception.").removesuffix("'>"), ' Retry ' + str(t) + ' of ' + str(retry))
             time.sleep(sleep_retry)
             if result is None:
                 try:
                     overpass_api.query(query=query)
-                except overpy.exception.OverpassTooManyRequests:
+                except (overpy.exception.OverpassTooManyRequests, overpy.exception.OverpassGatewayTimeout) as error0:
                     pass
             else:
                 return result
         if result is None:
-            print('No overpass results after ' + str(retry) + 'retries.')
-            raise overpy.exception.OverpassTooManyRequests
+            print('No overpass results after ' + str(retry) + ' retries.')
+            raise error
     return result
 
 
