@@ -26,7 +26,8 @@ def fill_empty_namecommand(area, batch, dry_run, filters, lang, username, verbos
     result = lt.get_overpass_result(area=area, filters=filters)
     n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
+    print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
+          f' ways and {str(len(result.relations))} relations).')
     print('######################################################')
     if n_objects > 200 and batch is not None and batch > 200:
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'

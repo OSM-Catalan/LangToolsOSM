@@ -24,8 +24,10 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
     if not filters:
         filters = f"nwr['name']['name:{lang}']"
     result = lt.get_overpass_result(area=area, filters=filters)
+    n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
-    print(str(len(result.nodes)) + ' nodes, ' + str(len(result.ways)) + ' ways and ' + str(len(result.relations)) + ' relations found.')
+    print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
+          f' ways and {str(len(result.relations))} relations).')
     print('######################################################')
 
     wikidata_ids = []
@@ -48,9 +50,10 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
     header = header + ['translations', f'{lang}.wikipedia_page', 'wikidata_id', 'multilang_names', 'all_tags']
     duplicated_fields = list(set([x for x in header if header.count(x) > 1]))
     extra_tags_ori = extra_tags
-    for rm_tag in duplicated_fields and extra_tags is not None:
-        extra_tags = list(extra_tags)
-        extra_tags.remove(rm_tag)
+    if extra_tags is not None:
+        for rm_tag in duplicated_fields:
+            extra_tags = list(extra_tags)
+            extra_tags.remove(rm_tag)
 
     header = list(dict.fromkeys(header))
 
