@@ -9,13 +9,14 @@ from lib import __version__
 
 
 @click.command()
-@click.option('--area', prompt='Bounding box (South,West,North,East), overpass filters or the exact name value of an area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou").')
+@click.option('--area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou"). Ignored if query is present.')
 @click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
-@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr[wikipedia][!wikidata]".""")
+@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr[wikipedia][!wikidata]". Ignored if query is present.""")
+@click.option('--query', type=str, help="""Overpass query to search for objects.""")
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username, verbose):
+def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, query, username, verbose):
     """Add «wikidata» from «wikipedia» tag."""
     if not dry_run:
         api = lt.login_osm(username=username)
@@ -25,7 +26,10 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, username,
     changeset_tags = {u'comment': f'Fill empty wikidata tags from wikipedia tag in {area} for {filters}',
                       u'source': u'wikipedia', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
-    result = lt.get_overpass_result(area=area, filters=filters)
+    if not area and not query:
+        print('Missing overpass "area" or "query" option. See "write_osm_objects_report --help" for details.')
+        exit()
+    result = lt.get_overpass_result(area=area, filters=filters, query=query)
     n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
     print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'

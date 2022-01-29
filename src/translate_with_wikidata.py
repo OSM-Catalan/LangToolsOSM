@@ -54,18 +54,19 @@ def db_item_row(db_key, db_item) -> list:
 
 
 @click.command()
-@click.option('--area', prompt='Bounding box (South,West,North,East), overpass filters or the exact name value of an area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou").')
+@click.option('--area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou"). Ignored if query is present.')
 @click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
 @click.option('--remember-answers', default=False, is_flag=True, help='Remember the answers for objects with the same wikidata value. Still asks for confirmation.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
-@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']".""")
+@click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.']['wikidata'][!'name:{lang}']". Ignored if query is present.""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--name-as-option', default=False, is_flag=True, help='Offer "name" value as an option to fill "name:lang". Useful for areas where "name" is in the language you want to fill "name:lang". See also fill_empty_name_lang program.')
 @click.option('--output', type=click.Path(dir_okay=False, writable=True), help='Path of the file to write the db of wikidata translations and user answers.')
 @click.option('--output-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the output file.')
+@click.option('--query', type=str, help="""Overpass query to search for objects.""")
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filters, lang, name_as_option, output, output_format, username, verbose):
+def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filters, lang, name_as_option, output, output_format, query, username, verbose):
     """Add «name:LANG» selecting the label or alias from «wikidata»."""
     if not dry_run:
         api = lt.login_osm(username=username)
@@ -75,7 +76,10 @@ def translate_with_wikidatacommand(area, batch, dry_run, remember_answers, filte
     changeset_tags = {u'comment': f'Fill empty name:{lang} tags translations from wikidata in {area} for {filters}',
                       u'source': u'wikidata', u'created_by': f'LangToolsOSM {__version__}'}
     print(changeset_tags)
-    result = lt.get_overpass_result(area=area, filters=filters)
+    if not area and not query:
+        print('Missing overpass "area" or "query" option. See "write_osm_objects_report --help" for details.')
+        exit()
+    result = lt.get_overpass_result(area=area, filters=filters, query=query)
     n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
     print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
