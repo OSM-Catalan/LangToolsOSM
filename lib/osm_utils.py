@@ -6,12 +6,13 @@ import time
 from colorama import Fore, Style
 
 
-def login_osm(username=None) -> osmapi.OsmApi:
+def login_osm(username=None, passwordfile=None) -> osmapi.OsmApi:
+    if passwordfile:
+        return osmapi.OsmApi(passwordfile=passwordfile)
     if not username:
         username = input('User: ')
     password = getpass.getpass('Password: ')
-    api = osmapi.OsmApi(username=username, password=password)
-    return api
+    return osmapi.OsmApi(username=username, password=password)
 
 
 def get_overpass_result(area: str, filters: str, query: str = None, retry=5, sleep_retry=10) -> overpy.Result:

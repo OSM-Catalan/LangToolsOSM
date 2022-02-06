@@ -19,9 +19,10 @@ from lib import __version__
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--input-file', type=click.Path(dir_okay=False), help='Path of the file with the tags to update. You can generate a template with write_osm_objects_report.')
 @click.option('--input-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the input file.')
+@click.option('--passwordfile', default=None, type=str, help='Path to a passwordfile, where on the first line username and password must be colon-separated (:). If provided, username option is ignored.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_hashtags, changeset_source, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, upload_tags, username, verbose):
+def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_hashtags, changeset_source, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, passwordfile, username, upload_tags, verbose):
     """Upload changed tags from an edited report file to OSM. UPLOAD_TAGS must match column names in the input file.
     You can generate a report file with write_osm_objects_report."""
     if upload_tags is None:
@@ -32,7 +33,7 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
     if dry_run:
         api = osmapi.OsmApi()
     else:
-        api = lt.login_osm(username=username)
+        api = lt.login_osm(username=username, passwordfile=passwordfile)
 
     print('After the first object edition a changeset with the following tags will be created:')
     changeset_tags = {u'comment': f'Update tags {upload_tags}', u'created_by': f'LangToolsOSM {__version__}'}

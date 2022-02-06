@@ -14,13 +14,14 @@ from tqdm import tqdm
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']". Ignored if query is present.""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
+@click.option('--passwordfile', default=None, type=str, help='Path to a passwordfile, where on the first line username and password must be colon-separated (:). If provided, username option is ignored.')
 @click.option('--query', type=str, help="""Overpass query to search for objects.""")
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
-def fill_empty_name_langcommand(area, batch, changeset_comment, changeset_hashtags, changeset_source, dry_run, filters, lang, query, username, verbose):
+def fill_empty_name_langcommand(area, batch, changeset_comment, changeset_hashtags, changeset_source, dry_run, filters, lang, passwordfile, query, username, verbose):
     """Looks for features with «name» & without «name:LANG» tags and copy «name» value to «name:LANG»."""
     if not dry_run:
-        api = lt.login_osm(username=username)
+        api = lt.login_osm(username=username, passwordfile=passwordfile)
     if not filters:
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
