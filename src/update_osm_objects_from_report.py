@@ -11,15 +11,17 @@ from lib import __version__
 @click.command()
 @click.argument('upload-tags', nargs=-1)
 @click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
+@click.option('--changeset-comment', type=str, help='Comment for the changeset.')
+@click.option('--changeset-hashtags', type=str, help='#hashtags for the changeset. Semicolon delimited (e.g. "#toponimsCat;#Calle-Carrer").')
+@click.option('--changeset-source', type=str, help='Source tag value for the changeset.')
 @click.option('--confirmed-edits', default=False, is_flag=True, help='Do not ask for confirmation for every object edition. Review carfully the input-file before using this option.')
 @click.option('--confirm-overwrites', default=False, is_flag=True, help='Ask for confirmation for updates that overwrite any tag value.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--input-file', type=click.Path(dir_okay=False), help='Path of the file with the tags to update. You can generate a template with write_osm_objects_report.')
 @click.option('--input-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the input file.')
-@click.option('--source', type=str, help='Source tag value for the changeset. Ignored in --dry-run mode.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, source, upload_tags, username, verbose):
+def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_hashtags, changeset_source, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, upload_tags, username, verbose):
     """Upload changed tags from an edited report file to OSM. UPLOAD_TAGS must match column names in the input file.
     You can generate a report file with write_osm_objects_report."""
     if upload_tags is None:
@@ -34,8 +36,12 @@ def update_osm_objects_from_reportcommand(batch, confirmed_edits, confirm_overwr
 
     print('After the first object edition a changeset with the following tags will be created:')
     changeset_tags = {u'comment': f'Update tags {upload_tags}', u'created_by': f'LangToolsOSM {__version__}'}
-    if source:
-        changeset_tags.update({'source': source})
+    if changeset_comment:
+        changeset_tags.update({'comment': changeset_comment})
+    if changeset_hashtags:
+        changeset_tags.update({'hashtags': changeset_hashtags})
+    if changeset_source:
+        changeset_tags.update({'source': changeset_source})
     print(changeset_tags)
 
     if input_format == 'csv':

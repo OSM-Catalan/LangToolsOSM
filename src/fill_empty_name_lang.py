@@ -8,13 +8,16 @@ from tqdm import tqdm
 @click.command()
 @click.option('--area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou"). Ignored if query is present.')
 @click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
+@click.option('--changeset-comment', type=str, help='Comment for the changeset.')
+@click.option('--changeset-hashtags', type=str, help='#hashtags for the changeset. Semicolon delimited (e.g. "#toponimsCat;#Calle-Carrer").')
+@click.option('--changeset-source', default='name tag', type=str, help='Source tags for the changeset.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']". Ignored if query is present.""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--query', type=str, help="""Overpass query to search for objects.""")
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print the changeset tags and all the tags of the features that you are currently editing.')
-def fill_empty_name_langcommand(area, batch, dry_run, filters, lang, query, username, verbose):
+def fill_empty_name_langcommand(area, batch, changeset_comment, changeset_hashtags, changeset_source, dry_run, filters, lang, query, username, verbose):
     """Looks for features with «name» & without «name:LANG» tags and copy «name» value to «name:LANG»."""
     if not dry_run:
         api = lt.login_osm(username=username)
@@ -22,8 +25,13 @@ def fill_empty_name_langcommand(area, batch, dry_run, filters, lang, query, user
         filters = f"nwr['name'][~'name:[a-z]+'~'.'][!'name:{lang}']"
     print('After the first object edition a changeset with the following tags will be created:')
     changeset_tags = {u'comment': f'Fill empty name:{lang} tags with name in {area} for {filters}',
-                      u'source': u'name tag', u'created_by': f'LangToolsOSM {__version__}'}
+                      u'source': changeset_source, u'created_by': f'LangToolsOSM {__version__}'}
+    if changeset_comment:
+        changeset_tags.update({'comment': changeset_comment})
+    if changeset_hashtags:
+        changeset_tags.update({'hashtags': changeset_hashtags})
     print(changeset_tags)
+
     if not area and not query:
         print('Missing overpass "area" or "query" option. See "write_osm_objects_report --help" for details.')
         exit()

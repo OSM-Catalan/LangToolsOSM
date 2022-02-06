@@ -11,12 +11,15 @@ from lib import __version__
 @click.command()
 @click.option('--area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou"). Ignored if query is present.')
 @click.option('--batch', type=int, default=None, help='Upload changes in groups of "batch" edits per changeset. Ignored in --dry-run mode.')
+@click.option('--changeset-comment', type=str, help='Comment for the changeset.')
+@click.option('--changeset-hashtags', type=str, help='#hashtags for the changeset. Semicolon delimited (e.g. "#toponimsCat;#Calle-Carrer").')
+@click.option('--changeset-source', default='wikipedia', type=str, help='Source tag value for the changeset.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr[wikipedia][!wikidata]". Ignored if query is present.""")
 @click.option('--query', type=str, help="""Overpass query to search for objects.""")
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, query, username, verbose):
+def fill_wikidata_from_wikipediacommand(area, batch, changeset_comment, changeset_hashtags, changeset_source, dry_run, filters, query, username, verbose):
     """Add «wikidata» from «wikipedia» tag."""
     if not dry_run:
         api = lt.login_osm(username=username)
@@ -24,8 +27,13 @@ def fill_wikidata_from_wikipediacommand(area, batch, dry_run, filters, query, us
         filters = 'nwr[wikipedia][!wikidata]'
     print('After the first object edition a changeset with the following tags will be created:')
     changeset_tags = {u'comment': f'Fill empty wikidata tags from wikipedia tag in {area} for {filters}',
-                      u'source': u'wikipedia', u'created_by': f'LangToolsOSM {__version__}'}
+                      u'source': changeset_source, u'created_by': f'LangToolsOSM {__version__}'}
+    if changeset_comment:
+        changeset_tags.update({'comment': changeset_comment})
+    if changeset_hashtags:
+        changeset_tags.update({'hashtags': changeset_hashtags})
     print(changeset_tags)
+
     if not area and not query:
         print('Missing overpass "area" or "query" option. See "write_osm_objects_report --help" for details.')
         exit()
