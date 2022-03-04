@@ -8,10 +8,22 @@ This tool requires the python3 interpreter. You can find it here:
 https://www.python.org/downloads/
 
 # Installation
-Download the code and run this command inside the folder
+Download the code and run ```pip3 install .``` inside the folder.
+
+In Windows to run this command to install LangToolsOSM you have to open the Windows Console
+```
+win + R "cmd"
+```
+ and execute ```cd``` to navigate to the target folder
+```
+cd <path>
+```
+once in the folder run the command
 ```
 pip3 install .
 ```
+
+
 
 # Usage
 
@@ -32,3 +44,10 @@ All commands accept the following flags:
 You will be asked for necessary options if they are not passed to the command call (```--area```, ```--lang```, ```--username```).
 
 You can define the search area by the coordinates of the bounding box in the following format ```(South,West,North,East)```, overpass filters or by the exact ```name``` value of a feature with area.
+
+# Example
+In the following example you will be able to review and add all the ```name:ca``` that are missing in the municipality of Alcalalí with the content of the ```name``` tag which is in catalan.
+
+```
+fill_empty_name_lang --lang ca -v --area "['name'='Alcalalí']" --dry-run
+```
