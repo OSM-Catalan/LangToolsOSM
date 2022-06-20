@@ -138,3 +138,31 @@ def get_wikipedia_from_wikidata(wikidata: list, batch_size=50) -> dict:
             if len(sitelinks) > 0:
                 out.update({wikidata_id: {'id': value['id'], 'sitelinks': sitelinks}})
     return out
+
+
+def get_instance_type_from_wikidata(wikidata: list, batch_size=50) -> dict:
+    id_instance_type = {}
+    for i in range(0, len(wikidata)):
+        query_P31 = 'https://www.wikidata.org/w/api.php?action=wbgetclaims&property=P31&format=json&props&entity=' + wikidata[i]
+        response_P31 = requests.get(query_P31)
+        data_P31 = response_P31.json()
+        id_P31 = [data_P31['claims']['P31'][x]['mainsnak']['datavalue']['value']['id'] for x in range(0, len(data_P31['claims']['P31']))]
+        id_instance_type.update({wikidata[i]: {'P31': id_P31}})
+
+    id_instance_type_unique = list(set(sum([x['P31'] for x in id_instance_type.values()], [])))
+
+    instance_type = {}
+    for ndx in range(0, len(id_instance_type_unique), batch_size):
+        batch_ids = id_instance_type_unique[ndx:min(ndx + batch_size, len(id_instance_type_unique))]
+        query_P31_name = 'https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=labels&languages=en|ca&ids=' + '|'.join(batch_ids)
+        response_P31_name = requests.get(query_P31_name)
+        batch_data_P31_name = response_P31_name.json()
+        instance_type.update({key: val['labels']['en']['value'] for key, val in batch_data_P31_name['entities'].items()})
+
+    out = {}
+    for wikidata_id, types in id_instance_type.items():
+        type_names = [instance_type[P31] for P31 in types['P31']]
+        out.update({wikidata_id: type_names})
+
+    return out
+
