@@ -20,7 +20,7 @@ from lib import __version__
 @click.option('--wikimedia-urls', default=False, is_flag=True, help='Write wikimedia URLs instead of the plain wikidata Id or wikipedia page title.')
 def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, output_format, query, verbose, wikidata_type, wikimedia_urls):
     """Generates a file with names, OSM Id, wikidata translations and EXTRA_TAGS in columns. EXTRA_TAGS Should include
-     at least the tags you will want to edit. You can edit and upload the changed tags with upload_osm_objects_from_report"""
+     at least the tags you will want to edit. You can edit and upload the changed tags with upload_osm_objects_from_report."""
     if verbose > 1:
         print(extra_tags)
     if not filters:
@@ -119,7 +119,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             object_data = [osm_object._type_value, osm_object.id, name, name_lang] + \
                           list(extra_tags_values.values()) + [translations, wikipedia_page]
             if wikidata_type:
-                object_data = object_data + [wikidata_type]
+                object_data = object_data + [wikidata_P31]
             object_data = object_data + [wikidata_id, names_tags, str(osm_object.tags)]
         elif output_format == 'mediawiki':
             if wikidata_id != '':
@@ -130,7 +130,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             object_data = [osm_object_str, osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] + \
                           list(extra_tags_values.values()) + [translations, wikipedia_page]
             if wikidata_type:
-                object_data = object_data + [wikidata_type]
+                object_data = object_data + [wikidata_P31]
             object_data = object_data + [wikidata_id, names_tags, str(osm_object.tags)]
         else:
             raise ValueError('File format must be "csv" or "mediawiki".')
