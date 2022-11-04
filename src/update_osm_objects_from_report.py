@@ -19,10 +19,11 @@ from lib import __version__
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--input-file', type=click.Path(dir_okay=False), help='Path of the file with the tags to update. You can generate a template with write_osm_objects_report.')
 @click.option('--input-format', type=click.Choice(['csv', 'mediawiki'], case_sensitive=False), default='csv', help='Format of the input file.')
+@click.option('--no-interaction', default=False, is_flag=True, help='Do not ask any interactive question.')
 @click.option('--passwordfile', default=None, type=str, help='Path to a passwordfile, where on the first line username and password must be colon-separated (:). If provided, username option is ignored.')
 @click.option('--username', type=str, help='OSM user name to login and commit changes. Ignored in --dry-run mode.')
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
-def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_hashtags, changeset_source, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, passwordfile, username, upload_tags, verbose):
+def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_hashtags, changeset_source, confirmed_edits, confirm_overwrites, dry_run, input_file, input_format, no_interaction, passwordfile, username, upload_tags, verbose):
     """Upload changed tags from an edited report file to OSM. UPLOAD_TAGS must match column names in the input file.
     You can generate a report file with write_osm_objects_report."""
     if upload_tags is None:
@@ -68,7 +69,10 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
     if n_objects > 200 and batch is not None and batch > 200:  # TODO: count tags with value
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
                          'Reduce the number of objects in the input file, add batch option < 200 or stop when you want by pressing Ctrl+c.' + Style.RESET_ALL)
-    start = input('Start editing [Y/n]: ').lower()
+    if no_interaction:
+        start = 'yes'
+    else:
+        start = input('Start editing [Y/n]: ').lower()
     if start not in ['y', 'yes', '']:
         exit()
 
@@ -127,6 +131,10 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
 
             if verbose > 0:
                 print(Fore.GREEN + Style.BRIGHT + '+ ' + str(tags) + Style.RESET_ALL)
+
+            if no_interaction and len(overwrite_tags) > 0:
+                print(Fore.RED + 'SKIP overwrites in no-interaction mode.' + Style.RESET_ALL)
+                continue
 
             if not confirmed_edits or (confirm_overwrites and len(overwrite_tags) > 0):
                 allow_update = input('Update tags [Y/n]: ').lower()
