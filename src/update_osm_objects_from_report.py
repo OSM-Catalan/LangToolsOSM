@@ -14,7 +14,7 @@ from lib import __version__
 @click.option('--changeset-comment', type=str, help='Comment for the changeset.')
 @click.option('--changeset-hashtags', type=str, help='#hashtags for the changeset. Semicolon delimited (e.g. "#toponimsCat;#Calle-Carrer").')
 @click.option('--changeset-source', type=str, help='Source tag value for the changeset.')
-@click.option('--confirmed-edits', default=False, is_flag=True, help='Do not ask for confirmation for every object edition. Review carfully the input-file before using this option.')
+@click.option('--confirmed-edits', default=False, is_flag=True, help='Do not ask for confirmation for every object edition. Review carefully the input-file before using this option.')
 @click.option('--confirm-overwrites', default=False, is_flag=True, help='Ask for confirmation for updates that overwrite any tag value.')
 @click.option('--dry-run', default=False, is_flag=True, help='Run the program without saving any change to OSM. Useful for testing. No login required.')
 @click.option('--input-file', type=click.Path(dir_okay=False), help='Path of the file with the tags to update. You can generate a template with write_osm_objects_report.')
