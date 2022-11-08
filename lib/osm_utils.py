@@ -15,10 +15,11 @@ def login_osm(username=None, passwordfile=None) -> osmapi.OsmApi:
     return osmapi.OsmApi(username=username, password=password)
 
 
-def get_overpass_result(area: str, filters: str, query: str = None, retry=5, sleep_retry=10) -> overpy.Result:
+def get_overpass_result(area: str, filters: str, query: str = None, coords=False, retry=2, sleep_retry=10) -> overpy.Result:
     overpass_api = overpy.Overpass()
-    # filters = "nwr['name']['wikidata'][~"name:[a-z]+"~"."]"
+    # filters = "nwr['name']['wikidata'][~'name:[a-z]+'~'.']"
     if query is None:
+        query = '[timeout:1000];\n'
         if re.search('([0-9.-]+,){3}[0-9.-]+', area):
             area = area.replace('[', '').replace(']', '').replace('(', '').replace(')', '')
             south = area.split(',')[0]
@@ -26,31 +27,25 @@ def get_overpass_result(area: str, filters: str, query: str = None, retry=5, sle
             north = area.split(',')[2]
             east = area.split(',')[3]
 
-            query = f"""
-            [timeout:1000];
-            (
-                {filters}({south},{west},{north},{east});
-            );
-            out tags qt;
-            """
+            query = query + ('(\n'
+                             f"""   {filters}({south},{west},{north},{east});"""
+                             '\n);')
         elif re.search(r'^\[.+\]$', area):
-            query = f"""
-            [timeout:1000];
-             area{area}->.searchArea;
-             (
-                 {filters}(area.searchArea);
-             );
-             out tags qt;
-             """
+            query = query + (f"""area{area}->.searchArea;"""
+                             '\n(\n'
+                             f"""    {filters}(area.searchArea);"""
+                             '\n);')
         else:
-            query = f"""
-            [timeout:1000];
-            area[name="{area}"]->.searchArea;
-            (
-                {filters}(area.searchArea);
-            );
-            out tags qt;
-            """
+            query = query + (f"""area[name="{area}"]->.searchArea;"""
+                             '\n(\n'
+                             f"""    {filters}(area.searchArea);"""
+                             '\n);')
+
+        if coords:
+            query = query + '\nout tags center qt;'
+        else:
+            query = query + '\nout tags qt;'
+
 
     try:
         result = overpass_api.query(query=query)

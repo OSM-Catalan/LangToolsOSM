@@ -10,6 +10,7 @@ from lib import __version__
 @click.command()
 @click.argument('extra-tags', nargs=-1)
 @click.option('--area', type=str, help='Search area (eg. "42.49,2.43,42.52,2.49", "[name_int=Kobane]" or "Le Canigou"). Ignored if query is present.')
+@click.option('--coords', default=False, is_flag=True, help='Add columns for the latitude and longitude of the center of the objects. Custom queries must include a out center mode.')
 @click.option('--filters', type=str, help="""Overpass filters to search for objects. Default to "nwr['name']['name:{lang}']". Ignored if query is present.""")
 @click.option('--lang', prompt='Language to add a multilingual name key (e.g. ca, en, ...)', type=str, help='A language ISO 639-1 Code. See https://wiki.openstreetmap.org/wiki/Multilingual_names .')
 @click.option('--output', type=click.Path(dir_okay=False, writable=True), help='Path of the file to write the db of wikidata translations and user answers.')
@@ -18,7 +19,7 @@ from lib import __version__
 @click.option('--verbose', '-v', count=True, help='Print all the tags of the features that you are currently editing.')
 @click.option('--wikidata-type', default=False, is_flag=True, help='Query the object type (P31) according to the wikitada tag.')
 @click.option('--wikimedia-urls', default=False, is_flag=True, help='Write wikimedia URLs instead of the plain wikidata Id or wikipedia page title.')
-def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, output_format, query, verbose, wikidata_type, wikimedia_urls):
+def write_osm_objects_reportcommand(area, coords, extra_tags, filters, lang, output, output_format, query, verbose, wikidata_type, wikimedia_urls):
     """Generates a file with names, OSM Id, wikidata translations and EXTRA_TAGS in columns. EXTRA_TAGS Should include
      at least the tags you will want to edit. You can edit and upload the changed tags with upload_osm_objects_from_report."""
     if verbose > 1:
@@ -28,7 +29,7 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
     if not area and not query:
         print('Missing overpass "area" or "query" option. See "write_osm_objects_report --help" for details.')
         exit()
-    result = lt.get_overpass_result(area=area, filters=filters, query=query)
+    result = lt.get_overpass_result(area=area, filters=filters, coords=coords, query=query)
     n_objects = len(result.nodes) + len(result.ways) + len(result.relations)
     print('######################################################')
     print(f'{str(n_objects)} objects found ({str(len(result.nodes))} nodes, {str(len(result.ways))}'
@@ -66,6 +67,9 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
             extra_tags.remove(rm_tag)
 
     header = list(dict.fromkeys(header))
+
+    if coords:
+        header = header + ['latitude', 'longitude']
 
     if verbose > 0:
         print('HEADER: ', str(header))
@@ -116,24 +120,28 @@ def write_osm_objects_reportcommand(area, extra_tags, filters, lang, output, out
                     wikidata_id = 'https://www.wikidata.org/wiki/' + wikidata_id
                 if wikipedia_page != '':
                     wikipedia_page = f'https://{lang}.wikipedia.com/wiki/{wikipedia_page}'
-            object_data = [osm_object._type_value, osm_object.id, name, name_lang] + \
-                          list(extra_tags_values.values()) + [translations, wikipedia_page]
-            if wikidata_type:
-                object_data = object_data + [wikidata_P31]
-            object_data = object_data + [wikidata_id, names_tags, str(osm_object.tags)]
+            object_data = [osm_object._type_value, osm_object.id]
         elif output_format == 'mediawiki':
             if wikidata_id != '':
                 wikidata_id = f'[https://www.wikidata.org/wiki/{wikidata_id} {wikidata_id}]'
             if wikipedia_page != '':
                 wikipedia_page = f'[https://{lang}.wikipedia.com/wiki/{wikipedia_page} {wikipedia_page}]'
             osm_object_str = '{{' + osm_object._type_value + '|' + str(osm_object.id) + '}}'
-            object_data = [osm_object_str, osm_object._type_value, osm_object.id, osm_object.tags['name'], name_lang] + \
-                          list(extra_tags_values.values()) + [translations, wikipedia_page]
-            if wikidata_type:
-                object_data = object_data + [wikidata_P31]
-            object_data = object_data + [wikidata_id, names_tags, str(osm_object.tags)]
+            object_data = [osm_object_str, osm_object._type_value, osm_object.id]
         else:
             raise ValueError('File format must be "csv" or "mediawiki".')
+
+        object_data = object_data + [name, name_lang] + list(extra_tags_values.values()) + [translations, wikipedia_page]
+        if wikidata_type:
+            object_data = object_data + [wikidata_P31]
+        object_data = object_data + [wikidata_id, names_tags, str(osm_object.tags)]
+
+        if coords:
+            if osm_object._type_value == 'node':
+                object_data = object_data + [str(osm_object.lat), str(osm_object.lon)]
+            else:
+                object_data = object_data + [str(osm_object.center_lat), str(osm_object.center_lon)]
+
         if verbose > 1:
             print(object_data)
 
