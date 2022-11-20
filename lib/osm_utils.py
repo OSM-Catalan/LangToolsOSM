@@ -150,15 +150,15 @@ def update_osm_object(osm_object: overpy.Element, tags: dict, api: osmapi.OsmApi
             return api.RelationUpdate(rel_data)
 
 
-def print_changeset_status(changeset: dict, n_edits: int, verbose: int):
+def print_changeset_status(changeset: dict, n_edits: int, n_changeset: int, verbose: int):
     if n_edits < 195:
-        print(f'Number of editions in the current changeset: {n_edits}')
+        print(f'Changeset {n_changeset}. Number of editions in the current changeset: {n_edits}')
     elif n_edits < 200:
         print(
-            Fore.YELLOW + f'Number of editions in the current changeset: {n_edits}'
+            Fore.YELLOW + f'Changeset {n_changeset}. Number of editions in the current changeset: {n_edits}'
                           ' (> 200 is considered a mass modification in OSMCha)' + Style.RESET_ALL)
     else:
-        print(Fore.RED + f'Too much editions in the current changeset: {n_edits}'
+        print(Fore.RED + f'Changeset {n_changeset}. Too many editions in the current changeset: {n_edits}'
                          '(> 200 is considered a mass modification in OSMCha)')
         print('Press "Ctrl-c" to STOP now.' + Style.RESET_ALL)
     if verbose > 1 and changeset:

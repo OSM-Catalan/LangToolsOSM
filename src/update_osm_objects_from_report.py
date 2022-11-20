@@ -77,12 +77,13 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
         exit()
 
     changeset = None
+    n_changeset = 0
     n_edits = 0
     total_edits = 0
     try:
         for row in tqdm(data.iterrows()):
             if not dry_run:
-                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, n_changeset=n_changeset, verbose=verbose)
             tags = row[1][upload_tags]
             tags = dict(tags.dropna())
 
@@ -146,6 +147,9 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
 
             if not dry_run:
                 if changeset is None:
+                    n_changeset = n_changeset + 1
+                    if batch and n_objects > batch and changeset_comment:  # TODO predict if more than 1 changeset will be used
+                        changeset_tags.update({'comment': changeset_comment + f' (part {n_changeset})'})
                     changeset = api.ChangesetCreate(changeset_tags)
                 if row[1]['typeOSM'] == "node":
                     committed = api.NodeUpdate(osm_object_data)

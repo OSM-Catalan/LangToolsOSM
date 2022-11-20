@@ -49,17 +49,21 @@ def fill_empty_name_langcommand(area, batch, changeset_comment, changeset_hashta
         exit()
 
     changeset = None
+    n_changeset = 0
     n_edits = 0
     total_edits = 0
     try:
         for osm_object in tqdm(result.nodes + result.ways + result.relations):
             if not dry_run:
-                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, verbose=verbose)
+                lt.print_changeset_status(changeset=changeset, n_edits=n_edits, n_changeset=n_changeset, verbose=verbose)
             lt.print_osm_object(osm_object, verbose=verbose)
             if 'name' in osm_object.tags.keys():
                 tags = {'name:' + lang: osm_object.tags['name']}
                 if not dry_run:
                     if changeset is None:
+                        n_changeset = n_changeset + 1
+                        if batch and n_objects > batch and changeset_comment:  # TODO predict if more than 1 changeset will be used
+                            changeset_tags.update({'comment': changeset_comment + f' (part {n_changeset})'})
                         changeset = api.ChangesetCreate(changeset_tags)
                     committed = lt.update_osm_object(osm_object=osm_object, tags=tags, api=api)
                     if committed:
