@@ -51,6 +51,13 @@ def fill_wikipedia_from_wikidatacommand(area, batch, changeset_comment, changese
         if 'wikidata' in osm_object.tags.keys():
             wikidata.append(osm_object.tags['wikidata'])
     wikidata_unique = list(set(wikidata))
+
+    # Check wikidata type and remove humans. Eg. wikidata_unique = ['Q19367952', 'Q3054042']
+    instance_type = wikimedia.get_instance_type_from_wikidata(wikidata_unique)
+    for wikidata_id, wikidata_type in instance_type.items():
+        if 'human' in wikidata_type:
+            wikidata_unique.remove(wikidata_id)
+
     db = wikimedia.get_wikipedia_from_wikidata(wikidata_unique)
     n_matches = 0
     n_objects_with_wikipedia = 0
