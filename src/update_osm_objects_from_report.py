@@ -66,7 +66,7 @@ def update_osm_objects_from_reportcommand(batch, changeset_comment, changeset_ha
         print(upload_tags)
         raise ValueError('tags must include column names present in the input_file. Missing columns ' +
                          str(set(upload_tags).difference(data.columns)))
-    if n_objects > 200 and batch is not None and batch > 200:  # TODO: count tags with value
+    if n_objects > 200 and ((batch is not None and batch > 200) or batch is None):  # TODO: count tags with value
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
                          'Reduce the number of objects in the input file, add batch option < 200 or stop when you want by pressing Ctrl+c.' + Style.RESET_ALL)
     if no_interaction:

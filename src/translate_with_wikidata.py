@@ -118,7 +118,7 @@ def translate_with_wikidatacommand(area, batch, changeset_comment, changeset_has
     print(f'{n_translations} translations available from wikidata for {n_objects_with_translations}'
           f' OSM objects ({percent_objects_with_translations}%).')
     print('######################################################')
-    if n_objects_with_translations > 200 and batch is not None and batch > 200:
+    if n_objects_with_translations > 200 and ((batch is not None and batch > 200) or batch is None:
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
                          'Reduce the area, add batch option < 200 or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
     start = input('Start translating [Y/n]: ').lower()

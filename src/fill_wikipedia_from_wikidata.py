@@ -68,7 +68,7 @@ def fill_wikipedia_from_wikidatacommand(area, batch, changeset_comment, changese
     print(f'{n_matches} wikipedia pages available from wikidata for {n_objects_with_wikipedia}'
           f' OSM objects ({percent_objects_with_wikipedia}%).')
     print('######################################################')
-    if n_objects > 200 and batch is not None and batch > 200:
+    if n_objects > 200 and ((batch is not None and batch > 200) or batch is None):
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
               'Reduce the area, add batch option < 200 or stop editing when you want by pressing Ctrl+c.' + Style.RESET_ALL)
     start = input('Start editing [Y/n]: ').lower()

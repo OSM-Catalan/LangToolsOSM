@@ -69,7 +69,7 @@ def fill_wikidata_from_wikipediacommand(area, batch, changeset_comment, changese
     print(f'{n_matches} translations available from wikidata for {n_objects_with_wikidata}'
           f' OSM objects ({percent_objects_with_wikidata}%).')
     print('######################################################')
-    if n_objects_with_wikidata > 200:
+    if n_objects_with_wikidata > 200 and ((batch is not None and batch > 200) or batch is None):
         print(Fore.RED + 'Changesets with more than 200 modifications are considered mass modifications in OSMCha.\n'
                          'Reduce the area or stop translating when you want by pressing Ctrl+c.' + Style.RESET_ALL)
     #     TODO: query to view the selection in overpass-turbo
