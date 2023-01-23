@@ -2,6 +2,7 @@ import getpass
 import osmapi
 import overpy
 import re
+import sys
 import time
 from colorama import Fore, Style
 
@@ -46,7 +47,6 @@ def get_overpass_result(area: str, filters: str, query: str = None, coords=False
         else:
             query = query + '\nout tags qt;'
 
-
     try:
         result = overpass_api.query(query=query)
     except (overpy.exception.OverpassTooManyRequests, overpy.exception.OverpassGatewayTimeout) as error:
@@ -62,8 +62,8 @@ def get_overpass_result(area: str, filters: str, query: str = None, coords=False
             else:
                 return result
         if result is None:
-            print('No overpass results after ' + str(retry) + ' retries.')
-            raise error
+            print(Fore.RED + 'No overpass results after ' + str(retry) + ' retries. ' + repr(error) + Style.RESET_ALL)
+            sys.exit(1)
     return result
 
 
