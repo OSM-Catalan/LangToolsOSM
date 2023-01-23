@@ -99,11 +99,13 @@ def print_osm_object(osm_object, remark='name', verbose=False):
     print("------------------------------------------------------")
 
 
-def update_osm_object(osm_object: overpy.Element, tags: dict, api: osmapi.OsmApi) -> dict:
+def update_osm_object(osm_object, tags: dict, api: osmapi.OsmApi) -> dict:
     if isinstance(osm_object, overpy.Element):
         object_tags = osm_object.tags
+    elif isinstance(osm_object, dict):
+        object_tags = osm_object['tag']
     else:
-        raise TypeError('osm_object must inherits "overpy.Element"')
+        raise TypeError('osm_object must inherits "overpy.Element" or dict following osmapi structure')
     overwrite_keys = list(set.intersection(set(tags.keys()), set(object_tags.keys())))
     if overwrite_keys:
         overwrite_keys.sort()

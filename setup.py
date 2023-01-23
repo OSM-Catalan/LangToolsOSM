@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 NAME = 'LangToolsOSM'
-VERSION = '0.2'
+VERSION = '0.2.1'
 
 REQUIRES = [
     'click',
